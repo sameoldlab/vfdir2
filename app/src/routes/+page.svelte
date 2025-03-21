@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <script lang="ts">
 	import View from '$lib/components/view.svelte'
 	import { entries } from '$lib/data/maps.svelte'

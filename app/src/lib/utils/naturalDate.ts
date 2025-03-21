@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 const SEC = 1000
 const MIN = SEC * 60
 const HOUR = MIN * 60

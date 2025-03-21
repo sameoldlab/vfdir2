@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { expect, it } from 'vitest'
 import { parseSql } from './parseSql'
 // AST Tests based on: https://codeschool.github.io/sqlite-parser/demo/

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import type { ParamMatcher } from '@sveltejs/kit';
 import { ULID_REGEX } from 'ulidx';
 

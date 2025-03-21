@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { EventSchemaR } from "./schema"
 import { create } from "superstruct"
 import type { DB, StmtAsync, TXAsync } from "@vlcn.io/xplat-api"

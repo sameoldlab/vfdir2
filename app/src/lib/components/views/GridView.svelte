@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <script lang="ts">
 	import type { Block, Channel } from '$lib/database/schema'
 	import BlockTypeCard from '$lib/components/BlockTypeCard.svelte'

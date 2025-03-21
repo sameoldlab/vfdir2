@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <script lang="ts">
 	import Modal from './modal.svelte'
 	let { id = $bindable('addChannel') }: { id: string } = $props()

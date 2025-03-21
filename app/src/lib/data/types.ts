@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import type { Channel, Connection } from "./channel.svelte";
 import type { User } from './user.svelte'
 import type { Block } from './block.svelte'

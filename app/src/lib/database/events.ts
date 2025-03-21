@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import type { ULID } from "ulidx"
 import type { ArenaBlock, ArenaChannel, ArenaChannelContents, ArenaChannelWithDetails, ArenaUser } from "arena-ts"
 import type { DB } from "@vlcn.io/crsqlite-wasm"

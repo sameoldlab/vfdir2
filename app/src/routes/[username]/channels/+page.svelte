@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <script lang="ts">
 	import { page } from '$app/state'
 	import GridView from '$lib/components/views/GridView.svelte'

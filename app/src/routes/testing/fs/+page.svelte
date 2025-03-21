@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <script lang="ts">
 	import { parseWebloc } from '$lib/utils/webloc'
 	import { parse } from 'csv-parse/browser/esm/sync'

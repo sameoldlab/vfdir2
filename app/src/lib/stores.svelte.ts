@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { writable, type Writable } from "svelte/store";
 import { getContext, setContext } from "svelte";
 import type { NavigationTarget } from "@sveltejs/kit";

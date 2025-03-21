@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import initWasm from '@vlcn.io/crsqlite-wasm'
 import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'

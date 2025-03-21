@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { type GetBlockApiResponse, type GetChannelsApiResponse, type GetUserChannelsApiResponse } from 'arena-ts'
 import { pullArena } from './sync'
 import { pool } from '$lib/database/connectionPool.svelte'

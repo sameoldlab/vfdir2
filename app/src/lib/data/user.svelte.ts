@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import type { Collection, Channel, Entry } from "./types"
 import { users, channels, entries } from "./maps.svelte"
 import type { ArenaUser } from "arena-ts"

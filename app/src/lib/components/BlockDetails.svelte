@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <script lang="ts">
 	import { naturalDate } from '$lib/utils/naturalDate'
 	import { handleFile } from '$lib/utils/getFile'

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { describe, expect, it } from "vitest";
 import { initStore } from "./createTables";
 import { DbPool } from "./connectionPool.svelte";

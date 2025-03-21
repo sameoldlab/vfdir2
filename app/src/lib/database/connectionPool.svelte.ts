@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { parseSql } from '$lib/utils/parseSql'
 // import initWasm, { DB, SQLite3 } from '@vlcn.io/crsqlite-wasm'
 // import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'

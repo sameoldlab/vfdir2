@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { SvelteMap } from "svelte/reactivity"
 import type { Channel, User, Entry, Media, Base } from './types'
 // import { openDB } from 'idb'

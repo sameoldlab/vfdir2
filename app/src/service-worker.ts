@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 /// <reference types="@sveltejs/kit" />
 /// <reference no-default-lib="true"/>
 /// <reference lib="esnext" />

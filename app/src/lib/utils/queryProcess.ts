@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 /** First element of an array; */
 export const first = <T>(rows: T[]) =>
   rows[0]

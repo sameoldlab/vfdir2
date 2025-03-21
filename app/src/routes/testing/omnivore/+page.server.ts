@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import type { PageServerLoad } from "./$types"
 import { Omnivore } from '@omnivore-app/api'
 

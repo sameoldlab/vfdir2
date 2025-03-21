@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import { ulid, type ULID } from "ulidx"
 /** Unix timestamp */
 type Timestamp = number

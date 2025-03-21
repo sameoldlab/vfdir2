@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 // import { sha256 } from 'multiformats/hashes/sha2'
 // import { CID } from 'multiformats/cid'
 import { pool } from '$lib/database/connectionPool.svelte'

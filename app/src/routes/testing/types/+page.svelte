@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <script lang="ts">
 	import GridView from '$lib/components/views/GridView.svelte'
 	import { pool } from '$lib/database/connectionPool.svelte'

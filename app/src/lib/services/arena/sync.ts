@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import type { DB } from '@vlcn.io/crsqlite-wasm'
 import type { ArenaChannelWithDetails } from 'arena-ts'
 import { arena_entry_sync, arena_connection_import, ev_stmt_close } from '$lib/database/events'

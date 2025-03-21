@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <script lang="ts">
 	import { resizer, key } from '$lib/actions'
 	import BlockDetail from '$lib/components/BlockDetails.svelte'

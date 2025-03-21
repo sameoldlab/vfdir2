@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import type { DB } from "@vlcn.io/crsqlite-wasm";
 import type { Block, Channel } from "$lib/store/schema";
 

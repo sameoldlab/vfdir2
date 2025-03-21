@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <script lang="ts">
 	import ReaderView from '$lib/components/ReaderView.svelte'
 	const entries = $state([])

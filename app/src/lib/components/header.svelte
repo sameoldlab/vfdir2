@@ -1,3 +1,5 @@
+<!-- SPDX-License-Identifier: MPL-2.0 -->
+
 <script lang="ts">
 	import { VIEWS } from '$lib/stores.svelte'
 	import block from './svg/block.svelte'

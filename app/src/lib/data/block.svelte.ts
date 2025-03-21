@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MPL-2.0
+
 import type { ArenaBlock } from "arena-ts"
 import { entries, channels, users, populateUser } from "./maps.svelte"
 import type { Collectable } from "./types"
