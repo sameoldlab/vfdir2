@@ -1,0 +1,13 @@
+# Logs
+logs
+*.log
+pnpm-debug.log*
+
+node_modules
+dist
+build
+certs
+.svelte-kit
+dist-ssr
+dummy
+*.local
