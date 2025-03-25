@@ -8,7 +8,6 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-check --tsconfig ./tsconfig.json",
-		"mkcert": "rm -rf ./certs && mkdir ./certs && mkcert --key-file ./certs/key.pem --cert-file ./certs/cert.pem 'localhost'",
 		"format": "prettier --write .",
 		"lint": "prettier --check .",
 		"test:unit": "vitest",
