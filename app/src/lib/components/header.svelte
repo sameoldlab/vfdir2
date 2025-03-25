@@ -31,7 +31,7 @@
 			</button>
 		{/each}
 	</div>
-	<nav>
+	<nav data-tauri-drag-region>
 		<!-- 
 		{#if inChannel}
 			<div class="section">
@@ -92,7 +92,6 @@
 		padding-inline: 1em;
 		grid-row: header-start / header-end;
 		grid-column: full-start / full-end;
-		border-bottom: var(--border);
 		background: var(--b1);
 
 		font-weight: 400;
@@ -100,8 +99,8 @@
 	}
 
 	.label {
-		height: 2rem;
-		width: 2rem;
+		height: 1.5rem;
+		width: 1.5rem;
 		padding: 0;
 		:global(svg) {
 			height: 100%;
