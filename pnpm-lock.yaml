@@ -21,13 +21,16 @@ importers:
 
   app:
     dependencies:
-      ui:
-        specifier: ^0.2.4
-        version: 0.2.4
+      '@tauri-apps/plugin-fs':
+        specifier: ~2
+        version: 2.2.1
     devDependencies:
       '@sveltejs/adapter-auto':
         specifier: ^3.3.1
         version: 3.3.1(@sveltejs/kit@2.20.3(@sveltejs/vite-plugin-svelte@4.0.0-next.6(svelte@5.1.2)(vite@5.4.16))(svelte@5.1.2)(vite@5.4.16))
+      '@sveltejs/adapter-static':
+        specifier: ^3.0.8
+        version: 3.0.8(@sveltejs/kit@2.20.3(@sveltejs/vite-plugin-svelte@4.0.0-next.6(svelte@5.1.2)(vite@5.4.16))(svelte@5.1.2)(vite@5.4.16))
       '@sveltejs/kit':
         specifier: ^2.20.1
         version: 2.20.3(@sveltejs/vite-plugin-svelte@4.0.0-next.6(svelte@5.1.2)(vite@5.4.16))(svelte@5.1.2)(vite@5.4.16)
@@ -692,6 +695,11 @@ packages:
     peerDependencies:
       '@sveltejs/kit': ^2.0.0
 
+  '@sveltejs/adapter-static@3.0.8':
+    resolution: {integrity: sha512-YaDrquRpZwfcXbnlDsSrBQNCChVOT9MGuSg+dMAyfsAa1SmiAhrA5jUYUiIMC59G92kIbY/AaQOWcBdq+lh+zg==}
+    peerDependencies:
+      '@sveltejs/kit': ^2.0.0
+
   '@sveltejs/kit@2.20.3':
     resolution: {integrity: sha512-z1SQ8qra/kGY3DzarG7xc6XsbKm8UY3SnI82XLI3PqMYWbYj/LpjPWuAz9WA5EyLjFNLD7sOAOEW8Gt4yjr5Vg==}
     engines: {node: '>=18.13'}
@@ -811,6 +819,9 @@ packages:
     resolution: {integrity: sha512-9Ta81jx9+57FhtU/mPIckDcOBtPTUdKM75t4+aA0X84b8Sclb0jy1xA8NplmcRzp2fsfIHNngU2NiRxsW5+yOQ==}
     engines: {node: '>= 10'}
     hasBin: true
+
+  '@tauri-apps/plugin-fs@2.2.1':
+    resolution: {integrity: sha512-KdGzvvA4Eg0Dhw55MwczFbjxLxsTx0FvwwC/0StXlr6IxwPUxh5ziZQoaugkBFs8t+wfebdQrjBEzd8NmmDXNw==}
 
   '@testing-library/dom@10.4.0':
     resolution: {integrity: sha512-pemlzrSESWbdAloYml3bAJMEfNh1Z7EduzqPKprCH5S341frlpYnUEW0H72dLxa6IsYr+mPno20GiSm+h9dEdQ==}
@@ -2547,6 +2558,10 @@ snapshots:
       '@sveltejs/kit': 2.20.3(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.1.2)(vite@6.2.4(yaml@2.7.1)))(svelte@5.1.2)(vite@6.2.4(yaml@2.7.1))
       import-meta-resolve: 4.1.0
 
+  '@sveltejs/adapter-static@3.0.8(@sveltejs/kit@2.20.3(@sveltejs/vite-plugin-svelte@4.0.0-next.6(svelte@5.1.2)(vite@5.4.16))(svelte@5.1.2)(vite@5.4.16))':
+    dependencies:
+      '@sveltejs/kit': 2.20.3(@sveltejs/vite-plugin-svelte@4.0.0-next.6(svelte@5.1.2)(vite@5.4.16))(svelte@5.1.2)(vite@5.4.16)
+
   '@sveltejs/kit@2.20.3(@sveltejs/vite-plugin-svelte@4.0.0-next.6(svelte@5.1.2)(vite@5.4.16))(svelte@5.1.2)(vite@5.4.16)':
     dependencies:
       '@sveltejs/vite-plugin-svelte': 4.0.0-next.6(svelte@5.1.2)(vite@5.4.16)
@@ -2684,6 +2699,10 @@ snapshots:
       '@tauri-apps/cli-win32-arm64-msvc': 2.4.1
       '@tauri-apps/cli-win32-ia32-msvc': 2.4.1
       '@tauri-apps/cli-win32-x64-msvc': 2.4.1
+
+  '@tauri-apps/plugin-fs@2.2.1':
+    dependencies:
+      '@tauri-apps/api': 2.4.1
 
   '@testing-library/dom@10.4.0':
     dependencies:

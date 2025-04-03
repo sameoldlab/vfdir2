@@ -5,7 +5,9 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
+		"dev:n": "pnpm tauri dev",
 		"build": "vite build",
+		"build:n": "NO_STRIP=true pnpm tauri build",
 		"preview": "vite preview",
 		"check": "svelte-check --tsconfig ./tsconfig.json",
 		"format": "prettier --write .",
@@ -15,6 +17,7 @@
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^3.3.1",
+		"@sveltejs/adapter-static": "^3.0.8",
 		"@sveltejs/kit": "^2.20.1",
 		"@sveltejs/vite-plugin-svelte": "4.0.0-next.6",
 		"@tauri-apps/api": "^2.4.0",
@@ -35,5 +38,8 @@
 		"typescript": "^5.8.2",
 		"ulidx": "^2.4.1",
 		"vitest": "^2.1.9"
+	},
+	"dependencies": {
+		"@tauri-apps/plugin-fs": "~2"
 	}
 }

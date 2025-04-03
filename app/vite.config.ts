@@ -11,7 +11,10 @@ export default defineConfig(({ }) => ({
 	optimizeDeps: {
 		esbuildOptions: { target }
 	},
-	build: { target },
+	build: {
+		assetsInlineLimit: Infinity,
+		target,
+	},
 	plugins: [sveltekit()],
 	test: {
 		environment: 'happy-dom',
