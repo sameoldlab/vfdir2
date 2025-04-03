@@ -2,10 +2,10 @@
 
 <script lang="ts">
 	import { parseWebloc } from '$lib/utils/webloc'
-	import { parse } from 'csv-parse/browser/esm/sync'
+	// import { parse } from 'csv-parse/browser/esm/sync'
 	import GridView from '$lib/components/views/GridView.svelte'
 	import type { BlocksRow } from '$lib/database/schema'
-	import * as s from 'superstruct'
+	// import * as s from 'superstruct'
 	import { SvelteMap } from 'svelte/reactivity'
 
 	let folder: Map<string, File> = $state(new SvelteMap())
