@@ -13,7 +13,7 @@ use std::os::windows;
 
 pub fn ls(dir: &Path) -> io::Result<Vec<PathBuf>> {
     let mut files: Vec<PathBuf> = Vec::new();
-    let paths = fs::read_dir(dir).unwrap();
+    let paths = fs::read_dir(dir)?;
     for path in paths {
         let path = path.unwrap().path();
         files.push(path);

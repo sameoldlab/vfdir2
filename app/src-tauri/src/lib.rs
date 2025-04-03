@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MPL-2.0 
+// SPDX-License-Identifier: MPL-2.0
 
 use std::path::{Path, PathBuf};
 
@@ -29,31 +29,18 @@ pub fn run() {
 #[tauri::command]
 fn get_directory(dir: &str) -> Result<Vec<FilePath>, Error> {
     let dir = Path::new(dir);
-    match file::ls(&dir) {
-        Ok(v) =>  {
-            let paths: Vec<FilePath> = v
-            .into_iter()
-            .filter_map(|path| {
-                let name = path.file_name()?
-                    .to_str()?
-                    .to_string();
-
-                Some(FilePath {
-                   name,
-                   path 
-                })
-            })
-            .collect();
-        Ok(paths)
-    }
-        Err(e) => {
-            println!("{}", e);
-            Err(e).unwrap()
-        }
-    }
+    let v = file::ls(&dir)?;
+    let paths: Vec<FilePath> = v
+        .into_iter()
+        .filter_map(|path| {
+            let name = path.file_name()?.to_str()?.to_string();
+            Some(FilePath { name, path })
+        })
+        .collect();
+    Ok(paths)
 }
 
-#[derive(Serialize )]
+#[derive(Serialize)]
 struct FilePath {
     name: String,
     path: PathBuf,
