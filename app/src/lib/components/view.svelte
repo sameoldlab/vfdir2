@@ -1,14 +1,11 @@
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
 <script lang="ts">
-	import { page } from '$app/stores'
 	import GridView from './views/GridView.svelte'
 	import MillerView from './views/MillerView.svelte'
-	import { pool } from '$lib/database/connectionPool.svelte'
-	import { VIEWS } from '$lib/stores.svelte'
-	import type { Block, Channel } from '$lib/pools/block.svelte'
+	import type { Block, Channel } from '$lib/data/types'
 	import { pageview } from '$lib/utils/pageView.svelte'
-	import { tick, untrack } from 'svelte'
+	import { tick } from 'svelte'
 
 	let {
 		data,

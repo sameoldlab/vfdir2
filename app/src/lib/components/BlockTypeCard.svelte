@@ -2,10 +2,10 @@
 
 <script lang="ts">
 	import './blockType.css'
-	import { handleFile } from '$lib/utils/getFile'
+	// import { handleFile } from '$lib/utils/getFile'
 	import { micromark } from 'micromark'
-	import { fade, blur } from 'svelte/transition'
-	import type { Entry } from '$lib/pools/block.svelte'
+	import { blur } from 'svelte/transition'
+	import type { Entry } from '$lib/data/types'
 
 	let { ...c }: Entry = $props()
 	const connect = (e: MouseEvent) => {
@@ -41,15 +41,13 @@
 				<img
 					in:blur
 					onload={imgLoad}
-					use:handleFile={{ src: c.image }}
-					data-src={c.image}
+					src={c.image}
 					alt={c.image}
 					class="waiting"
 				/>
 			{:else if c.type === 'attachment'}
 				<video
-					use:handleFile={{ src: c.attachment }}
-					data-src={c.attachment}
+					src={c.attachment}
 					autoplay
 					loop
 					muted
