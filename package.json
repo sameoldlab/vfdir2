@@ -1,0 +1,21 @@
+{
+	"name": "vfdir-2",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "pnpm nx dev app",
+		"dev:ui": "pnpm nx dev ui"
+	},
+	"type": "module",
+	"devDependencies": {
+		"nx": "^20.7.1",
+		"vite": "^6.2.1"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"esbuild"
+		]
+	},
+	"dependencies": {
+		"ui": "^0.2.4"
+	}
+}
