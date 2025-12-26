@@ -31,7 +31,7 @@
 			</button>
 		{/each}
 	</div>
-	<nav data-tauri-drag-region>
+	<nav >
 		<!-- 
 		{#if inChannel}
 			<div class="section">
