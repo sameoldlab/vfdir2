@@ -8,6 +8,11 @@ export default {
   preprocess: vitePreprocess({
     script: true
   }),
+  compilerOptions: {
+    experimental: {
+      async: true
+    }
+  },
 
   kit: {
     router: {
@@ -18,6 +23,9 @@ export default {
     },
     adapter: adapter({
       fallback: 'index.html'
-    })
+    }),
+    experimental: {
+      remoteFunctions: true
+    }
   }
 }
