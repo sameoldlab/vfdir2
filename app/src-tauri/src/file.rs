@@ -1,15 +1,12 @@
-// SPDX-License-Identifier: MPL-2.0 
+// SPDX-License-Identifier: MPL-2.0
 
 use std::{
- fs::{self, File, OpenOptions},
- io::{self, prelude::*},
- path::{Path, PathBuf},
+    fs::{self, File, OpenOptions},
+    io::{self, prelude::*},
+    os,
+    path::{Path, PathBuf},
 };
 use trash;
-#[cfg(target_family = "unix")]
-use std::os::unix;
-#[cfg(target_family = "windows")]
-use std::os::windows;
 
 pub fn ls(dir: &Path) -> io::Result<Vec<PathBuf>> {
     let mut files: Vec<PathBuf> = Vec::new();
@@ -22,11 +19,13 @@ pub fn ls(dir: &Path) -> io::Result<Vec<PathBuf>> {
 }
 
 pub fn symlink(original: &Path, link: &Path) -> io::Result<()> {
-    #[cfg(target_family = "unix")] {
-        unix::fs::symlink(original, link)
+    #[cfg(target_family = "unix")]
+    {
+        os::unix::fs::symlink(original, link)
     }
-    #[cfg(target_family = "windows")] {
-        windows::fs::symlink_file(original, link)
+    #[cfg(target_family = "windows")]
+    {
+        os::windows::fs::symlink_file(original, link)
     }
 }
 
