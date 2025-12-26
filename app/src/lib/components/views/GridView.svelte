@@ -3,7 +3,12 @@
 <script lang="ts">
 	import type { Block, Channel } from '$lib/data/types'
 	import BlockTypeCard from '$lib/components/BlockTypeCard.svelte'
-	let { raw = false, ...content }: (Block | Channel)[] = $props()
+	let {
+		raw = false,
+		...content
+	}: (Block | Channel)[] & {
+		raw: boolean
+	} = $props()
 </script>
 
 <div class="grid" class:raw>
