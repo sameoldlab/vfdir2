@@ -37,6 +37,8 @@
 		"@vlcn.io/crsqlite-wasm": "^0.16.0",
 		"@vlcn.io/xplat-api": "^0.15.0",
 		"arena-ts": "^1.0.2",
+		"convex": "^1.31.2",
+		"convex-svelte": "^0.0.12",
 		"happy-dom": "^20.0.11",
 		"micromark": "^4.0.2",
 		"prettier": "^3.7.4",
