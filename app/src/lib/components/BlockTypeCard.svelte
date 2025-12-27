@@ -22,7 +22,11 @@
 		return link
 	}
 	const source = !c.source ? null : c.type !== 'channel' ? c.source : makeLink()
-	const content = c.type === 'text' ? micromark(c.content) : null
+	let content = $state("")
+	 // c.type === 'text' ? micromark() : null
+	c.content?.then(c => {
+		content = micromark(c)
+	})
 	const imgLoad = (e: Event) => {
 		const el = e.target as HTMLImageElement
 		el.classList.add('loaded')
