@@ -15,12 +15,6 @@ export default {
   },
 
   kit: {
-    router: {
-      type: "hash"
-    },
-    output: {
-      bundleStrategy: 'inline',
-    },
     adapter: adapter({
       fallback: 'index.html'
     }),

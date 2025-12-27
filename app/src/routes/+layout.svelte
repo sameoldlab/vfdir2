@@ -3,62 +3,60 @@
 <script lang="ts">
 	import '../app.css'
 	import Header from '$lib/components/header.svelte'
-	// import { initStore } from '$lib/database/createTables'
-	// import { pool } from '$lib/database/connectionPool.svelte'
+	import { initStore } from '$lib/database/createTables'
+	import { pool } from '$lib/database/connectionPool.svelte'
 	import { onMount } from 'svelte'
 	import { beforeNavigate } from '$app/navigation'
-	import { getTree, setTree } from '$lib/stores.svelte'
+	import { setTree } from '$lib/stores.svelte'
 	import { fade } from 'svelte/transition'
 	import { entries } from '$lib/data/maps.svelte'
 	import { pullArena } from '$lib/services/arena/sync'
 	import { arenaChannels } from '$lib/dummy/dupeChannels'
 	let { children } = $props()
 
-	setTree()
-	const tree = getTree()
+	const tree = $state([])
+	setTree(tree)
+
 	beforeNavigate((nav) => {
 		switch (nav.type) {
 			case 'link':
-				if (nav.from.route.id === '/') $tree = [nav.from]
-				else $tree.push(nav.from)
+				if (nav.from.route.id === '/') {
+					tree.length = 0
+					tree[0] = [nav.from]
+				} else tree.push(nav.from)
 				break
 			case 'popstate':
-				if (nav.to.url.href === $tree.at(-1)?.url.href) $tree.pop()
-				else $tree.push(nav.from)
+				if (nav.to.url.href === tree.at(-1)?.url.href) tree.pop()
+				else tree.push(nav.from)
 		}
 	})
 
-	let ready = $state(false)
-	// onMount(() => {
-	// 	pool.exec(async (tx) => {
-	// 		await initStore(tx)
-	// 		const { watchEvents, bootstrap } = await import(
-	// 			'$lib/database/watchEvents'
-	// 		)
-	// 		watchEvents()
-	// 		await bootstrap(tx)
-	// 		pullArena(tx, ...arenaChannels)
-	// 		console.log('ready')
-	// 		ready = true
-	// 		let str = JSON.stringify(entries.entries())
-	// 	})
-	// })
+	let ready = $state(true)
+	onMount(() => {
+		pool.exec(async (tx) => {
+			await initStore(tx)
+			const { watchEvents, bootstrap } =
+				await import('$lib/database/watchEvents')
+			watchEvents()
+			await bootstrap(tx)
+			pullArena(tx, ...arenaChannels)
+			console.log('ready')
+			ready = true
+		})
+	})
 </script>
 
-
-	<Header />
-	<div id="padheader"></div>
-	{@render children()}
-<!--
-	<div in:fade={{ duration: 200 }}>
-		<p>Creating visually fluid dispensaries...</p>
-	</div>
+<Header />
+<div id="padheader"></div>
 {#if pool.status === 'error'}
 	<div class="error">{pool.error}</div>
 {:else if pool.status === 'loading' || !ready}
+	<div in:fade={{ duration: 200 }}>
+		<p>Creating visually fluid dispensaries...</p>
+	</div>
 {:else}
+	{@render children()}
 {/if}
--->
 
 <style>
 	:global(div#contents) {

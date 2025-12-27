@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { parseSql } from '$lib/utils/parseSql'
-// import initWasm, { DB, SQLite3 } from '@vlcn.io/crsqlite-wasm'
-// import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
-// import type { StmtAsync, TXAsync } from '@vlcn.io/xplat-api'
-// import { untrack } from 'svelte'
-// import { SvelteMap, SvelteSet } from 'svelte/reactivity'
+import initWasm, { DB, SQLite3 } from '@vlcn.io/crsqlite-wasm'
+import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
+import type { StmtAsync, TXAsync } from '@vlcn.io/xplat-api'
 
 type DELETE = 9
 type INSERT = 18
