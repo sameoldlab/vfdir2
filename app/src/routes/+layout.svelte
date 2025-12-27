@@ -12,8 +12,11 @@
 	import { entries } from '$lib/data/maps.svelte'
 	import { pullArena } from '$lib/services/arena/sync'
 	import { arenaChannels } from '$lib/dummy/dupeChannels'
+	import { setupConvex } from 'convex-svelte'
+	import { PUBLIC_CONVEX_URL } from '$env/static/public'
 	let { children } = $props()
 
+	setupConvex(PUBLIC_CONVEX_URL)
 	const tree = $state([])
 	setTree(tree)
 
