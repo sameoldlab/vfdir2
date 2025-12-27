@@ -16,6 +16,11 @@
 		"test": "pnpm test:unit"
 	},
 	"devDependencies": {
+		"@atcute/client": "^4.1.1",
+		"@atcute/jetstream": "^1.1.2",
+		"@atcute/lex-cli": "^2.5.2",
+		"@atcute/lexicon-community": "^1.1.4",
+		"@atcute/xrpc-server": "^0.1.5",
 		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.49.2",
