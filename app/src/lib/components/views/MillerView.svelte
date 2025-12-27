@@ -5,7 +5,7 @@
 	import BlockDetail from '$lib/components/BlockDetails.svelte'
 	import { getTree } from '$lib/stores.svelte'
 	import { goto, replaceState } from '$app/navigation'
-	import { page } from '$app/stores'
+	import { page } from '$app/state'
 	import type { Connection, Entry, Channel, Block } from '$lib/data/types'
 	import { channels, entries } from '$lib/data/maps.svelte'
 
@@ -23,8 +23,8 @@
 	})
 
 	/** key of currently hovered item */
-	let focused: Block['id'] | Channel['slug'] | undefined = $state(
-		$page.url.hash?.slice(1) ?? data[0]?.key
+	let focused: Block['id'] | Channel['slug'] | undefined = $derived(
+		page.url.hash?.slice(1) ?? data[0]?.key
 	)
 	const detail = $derived(entries.get(focused))
 </script>
@@ -62,7 +62,7 @@
 					focused = b.key
 				}}
 				ondblclick={(e) => {
-					goto(e.target.href)
+					goto((e.target as HTMLAnchorElement).href)
 				}}
 				onfocus={() => {
 					focused = b.key
