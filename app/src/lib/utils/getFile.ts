@@ -5,10 +5,11 @@
 import { pool } from '$lib/database/connectionPool.svelte'
 import type { Action } from 'svelte/action'
 import { media } from '$lib/data/maps.svelte'
+import { browser } from '$app/environment'
 
 let cacheDir: FileSystemDirectoryHandle = null
 let opfs_available = false
-if (!cacheDir) {
+if (!cacheDir && browser) {
   navigator.storage.getDirectory().then(async (fsdh: FileSystemDirectoryHandle) => {
     cacheDir = await fsdh.getDirectoryHandle('cache', { create: true })
     opfs_available = true
@@ -67,7 +68,8 @@ const load = async (el: HTMLImageElement | HTMLVideoElement, src: string) => {
   // media.set(src, cached)
   el.src = src
 }
-const observer = new IntersectionObserver((entries, observer) => {
+
+const observer = browser && new IntersectionObserver((entries, observer) => {
   for (const entry of entries) {
     if (!entry.isIntersecting) continue
     let el = entry.target as HTMLImageElement | HTMLVideoElement
