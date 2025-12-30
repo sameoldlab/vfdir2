@@ -5,9 +5,6 @@
 
 interface ImportMetaEnv {
   // dev
-  readonly ARENA_KEY: string
-  readonly RAINDROP_KEY: string
-  readonly OMNIVORE_KEY: string
   readonly VITE_DEVICE_KEY: string
 
   // production
