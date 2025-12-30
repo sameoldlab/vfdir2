@@ -2,7 +2,7 @@
 
 import { SvelteMap } from "svelte/reactivity"
 import type { Channel, User, Entry, Media, Base } from './types'
-// import { openDB } from 'idb'
+import { openDB } from 'idb'
 
 export const entries = $state(new SvelteMap<string, Entry>())
 export const channels = $state(new SvelteMap<string, Channel>())
@@ -15,14 +15,14 @@ export function populateUser(key: string, userId: string, type: 'channels' | 'bl
   if (user) user.addEntry(key, type)
 }
 export const persistData = async () => {
-  // const db = await openDB('objectStore', undefined, {
-  //   upgrade(db, oldV, newV, transaction, event) {
-  //     for (const store of ['blocks', 'channels', 'media', 'users']) {
-  //       if (db.objectStoreNames.contains(store)) continue
-  //       db.createObjectStore(store, { keyPath: 'key' })
-  //     }
-  //   }
-  // })
+  const db = await openDB('objectStore', undefined, {
+    upgrade(db, oldV, newV, transaction, event) {
+      for (const store of ['blocks', 'channels', 'media', 'users']) {
+        if (db.objectStoreNames.contains(store)) continue
+        db.createObjectStore(store, { keyPath: 'key' })
+      }
+    }
+  })
 
   const writeMap = async (value: Base, key: Base['key'], store: string) => {
     const data = store !== 'media' ? value.write() : value
