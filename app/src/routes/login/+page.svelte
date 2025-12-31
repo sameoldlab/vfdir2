@@ -4,30 +4,38 @@
 	import RaindropIcon from '$lib/components/svg/raindrop.svelte'
 	const params = [
 		{
-			service: 'are.na',
-			auth_url: `https://dev.are.na/oauth/authorize?client_id=${import.meta.env.VITE_ARENA_CLIENT_ID}&redirect_uri=${encodeURIComponent(import.meta.env.VITE_ARENA_CALLBACK_URL)}&response_type=code`,
+			label: 'are.na',
+			service: 'arena',
 			icon: ArenaIcon
 		},
 		{
+			label: 'raindrop',
 			service: 'raindrop',
-			auth_url: `https://raindrop.io/oauth/authorize?client_id=${import.meta.env.VITE_RNDRP_CLIENT_ID}&redirect_uri=${encodeURIComponent(import.meta.env.VITE_RNDRP_CALLBACK_URL)}`,
 			icon: RaindropIcon
 		}
 	]
 </script>
 
-<div class="form">
-	<p class="text-7">Jack in your mortal coil(s)</p>
-	<div class="row full">
-		{#each params as { service, auth_url: href, icon: Icon } (service)}
-			<a {href} class="btn">
-				<Icon />
-				<span>{service}</span></a
-			>
-		{/each}
-	</div>
-	<div class="row"> <hr /> or <hr /> </div>
-	<form action="POST" use:enhance>
+<form method="POST" use:enhance>
+	<div class="form">
+		<p class="text-7">Jack in your mortal coil(s)</p>
+		<div class="row full">
+			{#each params as { label, service, icon: Icon } (label)}
+				<button
+					formaction="/oauth/{service}"
+					disabled={service != 'arena'}
+					class="btn"
+				>
+					<Icon />
+					<span>{label}</span></button
+				>
+			{/each}
+		</div>
+		<div class="row">
+			<hr />
+			or
+			<hr />
+		</div>
 		<label for="atproto-connect">
 			<div class="row">
 				<span class="text-5"
@@ -40,8 +48,8 @@
 			<input type="text" name="atproto-connect" placeholder="cool-site.me" />
 		</label>
 		<button class="btn text-4" type="submit">continue.</button>
-	</form>
-</div>
+	</div>
+</form>
 
 <style>
 	.form {
@@ -106,5 +114,9 @@
 		& > * {
 			flex-grow: 1;
 		}
+	}
+	button:disabled {
+		opacity: .3;
+		cursor: not-allowed;
 	}
 </style>

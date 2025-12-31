@@ -2,6 +2,7 @@
 
 /// <reference types="@sveltejs/kit" />
 
+import type { AuthContext, SessionCapabilities } from "$lib/server/auth/types"
 import type { Did } from "@atcute/lexicons"
 import type { OAuthSession } from "@atcute/oauth-node-client"
 
@@ -13,6 +14,9 @@ declare global {
 		interface Locals {
 			user?: OAuthSession[]
 			did?: Did
+			ctx: AuthContext,
+			deviceUid: string
+			capabilities: SessionCapabilities
 		}
 		// interface Platform {}
 		// interface Session {}
