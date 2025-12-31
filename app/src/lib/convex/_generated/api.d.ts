@@ -10,7 +10,6 @@
 
 import type * as crons from "../crons.js";
 import type * as oauth from "../oauth.js";
-import type * as sessions from "../sessions.js";
 
 import type {
   ApiFromModules,
@@ -21,7 +20,6 @@ import type {
 declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   oauth: typeof oauth;
-  sessions: typeof sessions;
 }>;
 
 /**
