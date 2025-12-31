@@ -72,12 +72,14 @@
 		 -->
 	</nav>
 	<div class="main">
-		<button class="" popovertarget={addChannelId} onclick={() => {}}
+		<button class="text-6" popovertarget={addChannelId} onclick={() => {}}
 			>+ New<kbd>N</kbd></button
 		>
-		<button class="" popovertarget={addChannelId} onclick={() => {}}
+		<button class="text-6" popovertarget={addChannelId} onclick={() => {}}
 			>Menu
 		</button>
+		<a href="/login" class="text-6">Login
+		</a>
 	</div>
 </header>
 
