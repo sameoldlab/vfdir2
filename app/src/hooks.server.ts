@@ -1,7 +1,6 @@
 import type { Handle } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
 import type { Did } from "@atcute/lexicons";
-import { getOAuthClient } from "$lib/server/auth/atp_oauth";
 import { ulid } from "ulidx";
 import { ensureDevice, getCapabilities } from "$lib/server/auth/manager";
 import type { AuthContext } from "$lib/server/auth/types";
@@ -51,6 +50,9 @@ const sessionHandle: Handle = async ({ event, resolve }) => {
 
   return resolve(event)
 }
+function getOAuthClient() {
+  throw new Error("Function not implemented.");
+}
 
 const addAuthContext: Handle = async ({ event, resolve }) => {
   event.locals.ctx = ctx
@@ -86,3 +88,4 @@ const sessionManger: Handle = async ({ event, resolve }) => {
 }
 
 export const handle: Handle = sequence(addAuthContext, sessionManger)
+
