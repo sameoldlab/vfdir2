@@ -1,13 +1,13 @@
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
 <script lang="ts">
+	import { env } from '$env/dynamic/public'
 	import '../app.css'
 	import { setupConvex } from 'convex-svelte'
-	import { PUBLIC_CONVEX_URL } from '$env/static/public'
 
 	let { children } = $props()
 
-	setupConvex(PUBLIC_CONVEX_URL)
+	setupConvex(env.PUBLIC_CONVEX_URL)
 </script>
 
 	{@render children()}
