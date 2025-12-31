@@ -8,8 +8,6 @@
 	import { beforeNavigate } from '$app/navigation'
 	import { setTree } from '$lib/stores.svelte'
 	import { fade } from 'svelte/transition'
-	import { pullArena } from '$lib/services/arena/sync'
-	import { arenaChannels } from '$lib/dummy/dupeChannels'
 	let { children } = $props()
 
 	const tree = $state([])
@@ -37,7 +35,7 @@
 				await import('$lib/database/watchEvents')
 			watchEvents()
 			await bootstrap(tx)
-			pullArena(tx, ...arenaChannels)
+			// pullArena(tx, ...arenaChannels)
 			console.log('ready')
 			ready = true
 		})

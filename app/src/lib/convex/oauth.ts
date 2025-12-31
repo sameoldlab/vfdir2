@@ -5,6 +5,7 @@ import { v } from "convex/values";
 const SERVICE_KIND = v.union(
   v.literal('arena'),
   v.literal('atproto'),
+  v.literal('raindrop'),
 );
 
 // Devices
@@ -17,8 +18,8 @@ export const getOrCreateDevice = mutation({
       .first()
 
     if (existing) return existing._id;
-
-    return await ctx.db.insert('devices', { uid })
+    const newDev = await ctx.db.insert('devices', { uid })
+    return newDev
   },
 })
 
@@ -35,14 +36,20 @@ export const getDevice = query({
 // Connections
 export const getServiceConnection = query({
   args: {
-    deviceId: v.id("devices"),
+    deviceUid: v.string(),
     service: SERVICE_KIND,
   },
-  handler: async (ctx, { deviceId, service }) => {
+  handler: async (ctx, { deviceUid, service }) => {
+    const device = await ctx.db
+      .query('devices')
+      .withIndex('by_uid', (q) => q.eq('uid', deviceUid))
+      .first()
+    if (!device) throw new Error('device not found')
+
     const connection = await ctx.db
       .query("serviceConnections")
       .withIndex("by_deviceId_service", (q) =>
-        q.eq("deviceId", deviceId).eq("service", service)
+        q.eq("deviceId", device._id).eq("service", service)
       )
       .first();
 
@@ -82,20 +89,25 @@ export const getAllServiceConnections = query({
 
 export const setServiceConnection = mutation({
   args: {
-    deviceId: v.id("devices"),
+    deviceUid: v.string(),
     service: SERVICE_KIND,
-    userId: v.string(),
-    displayName: v.string(),
+    userId: v.optional(v.union(v.string(), v.number())),
+    displayName: v.optional(v.string()),
     session: v.string(),
     expiresAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { deviceId, service } = args;
+    const { deviceUid, service } = args
+    const device = await ctx.db
+      .query('devices')
+      .withIndex('by_uid', (q) => q.eq('uid', deviceUid))
+      .first()
+    if (!device) throw new Error('device not found')
 
     const existing = await ctx.db
       .query("serviceConnections")
       .withIndex("by_deviceId_service", (q) =>
-        q.eq("deviceId", deviceId).eq("service", service)
+        q.eq("deviceId", device._id).eq("service", service)
       )
       .first();
 
@@ -108,7 +120,7 @@ export const setServiceConnection = mutation({
       });
     } else {
       await ctx.db.insert("serviceConnections", {
-        deviceId,
+        deviceId: device._id,
         service: args.service,
         userId: args.userId,
         displayName: args.displayName,
@@ -169,7 +181,7 @@ export const findRelatedConnections = query({
         if (other.service !== service && !other.expiresAt || (other.expiresAt && other.expiresAt > Date.now())) {
           suggestions.set(other.service, {
             service: other.service,
-            displayName: other.displayName,
+            displayName: other.displayName ?? '',
           });
         }
       }

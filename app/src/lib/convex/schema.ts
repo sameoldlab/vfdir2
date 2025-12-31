@@ -4,6 +4,7 @@ import { v } from "convex/values";
 const SERVICE_KIND = v.union(
   v.literal('arena'),
   v.literal('atproto'),
+  v.literal('raindrop'),
 );
 
 export default defineSchema({
@@ -15,8 +16,8 @@ export default defineSchema({
     /** device session */
     deviceId: v.id("devices"),
     service: SERVICE_KIND,
-    userId: v.string(),
-    displayName: v.string(),
+    userId: v.optional(v.union(v.string(), v.number())),
+    displayName: v.optional(v.string()),
     session: v.string(),
     expiresAt: v.optional(v.number())
   })
