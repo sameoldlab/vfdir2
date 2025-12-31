@@ -2,12 +2,12 @@
 
 <script lang="ts">
 	import Header from '$lib/components/header.svelte'
-	import { initStore } from '$lib/database/createTables'
-	import { pool } from '$lib/database/connectionPool.svelte'
+	// import { initStore } from '$lib/database/createTables'
+	// import { pool } from '$lib/database/connectionPool.svelte'
 	import { onMount } from 'svelte'
 	import { beforeNavigate } from '$app/navigation'
 	import { setTree } from '$lib/stores.svelte'
-	import { fade } from 'svelte/transition'
+	// import { fade } from 'svelte/transition'
 	let { children } = $props()
 
 	const tree = $state([])
@@ -29,7 +29,7 @@
 
 	let ready = $state(true)
 	onMount(() => {
-		pool.exec(async (tx) => {
+		/* pool.exec(async (tx) => {
 			await initStore(tx)
 			const { watchEvents, bootstrap } =
 				await import('$lib/database/watchEvents')
@@ -38,21 +38,13 @@
 			// pullArena(tx, ...arenaChannels)
 			console.log('ready')
 			ready = true
-		})
+		}) */
 	})
 </script>
 
 <Header />
 <div id="padheader"></div>
-{#if pool.status === 'error'}
-	<div class="error">{pool.error}</div>
-{:else if pool.status === 'loading' || !ready}
-	<div in:fade={{ duration: 200 }}>
-		<p>Creating visually fluid dispensaries...</p>
-	</div>
-{:else}
-	{@render children()}
-{/if}
+{@render children()}
 
 <style>
 	:global(div#contents) {
