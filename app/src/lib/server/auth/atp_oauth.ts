@@ -1,6 +1,5 @@
 import { env as penv } from '$env/dynamic/private'
 import { env } from '$env/dynamic/public'
-import { importJwkKey, MemoryStore, OAuthClient, scope } from '@atcute/oauth-node-client'
 import {
   CompositeDidDocumentResolver,
   CompositeHandleResolver,

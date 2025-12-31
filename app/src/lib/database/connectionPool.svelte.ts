@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import initWasm, { DB, SQLite3 } from '@vlcn.io/crsqlite-wasm'
+import initWasm, { type DB, type SQLite3 } from '@vlcn.io/crsqlite-wasm'
 import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
 import type { StmtAsync, TXAsync } from '@vlcn.io/xplat-api'
 
