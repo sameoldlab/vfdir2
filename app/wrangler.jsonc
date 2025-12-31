@@ -1,5 +1,12 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "vfdir2",
+  "main": ".svelte-kit/cloudflare/_worker.js",
+  "compatibility_date": "2025-01-01",
+  "assets": {
+    "binding": "ASSETS",
+    "directory": ".svelte-kit/cloudflare"
+  },
   "observability": {
     "enabled": false,
     "head_sampling_rate": 1,
