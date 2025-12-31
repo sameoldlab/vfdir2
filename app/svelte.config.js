@@ -1,5 +1,5 @@
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte'
-import adapter from '@sveltejs/adapter-auto'
+import adapter from '@sveltejs/adapter-cloudflare'
 
 /** @type {import('@sveltejs/kit').Config} */
 export default {
@@ -15,9 +15,7 @@ export default {
   },
 
   kit: {
-    adapter: adapter({
-      fallback: 'index.html'
-    }),
+    adapter: adapter(),
     experimental: {
       remoteFunctions: true
     }
