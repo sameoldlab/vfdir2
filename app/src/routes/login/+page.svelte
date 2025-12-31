@@ -23,7 +23,6 @@
 			{#each params as { label, service, icon: Icon } (label)}
 				<button
 					formaction="/oauth/{service}"
-					disabled={service != 'arena'}
 					class="btn"
 				>
 					<Icon />
