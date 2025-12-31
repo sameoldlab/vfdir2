@@ -1,4 +1,5 @@
-import { env } from '$env/dynamic/private'
+import { env as penv } from '$env/dynamic/private'
+import { env } from '$env/dynamic/public'
 import { importJwkKey, MemoryStore, OAuthClient, scope } from '@atcute/oauth-node-client'
 import {
   CompositeDidDocumentResolver,
@@ -11,7 +12,6 @@ import {
 import { NodeDnsHandleResolver } from '@atcute/identity-resolver-node';
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '$lib/convex/_generated/api';
-import { PUBLIC_CONVEX_URL } from '$env/static/public';
 
 class ConvexStore<T> {
   private getQuery: any;
@@ -56,7 +56,7 @@ class ConvexStore<T> {
     // Optional: implement if needed
   }
 }
-const convex = new ConvexHttpClient(PUBLIC_CONVEX_URL)
+const convex = new ConvexHttpClient(env.PUBLIC_CONVEX_URL)
 
 export const createOAuthClient = async () => new OAuthClient({
   metadata: {
@@ -82,7 +82,7 @@ export const createOAuthClient = async () => new OAuthClient({
     // must be same-origin as client_id. if omitted, `oauth.metadata` will inline jwks instead.
     jwks_uri: 'https://example.com/jwks.json',
   },
-  keyset: await Promise.all([importJwkKey(env.PRIVATE_KEY_JWK)]),
+  keyset: await Promise.all([importJwkKey(penv.PRIVATE_KEY_JWK)]),
   stores: {
     sessions: new ConvexStore(api.oauth.getSession, api.oauth.setSession, api.oauth.deleteSession),
     states: new ConvexStore(api.oauth.getState, api.oauth.setState, api.oauth.deleteState),
