@@ -1,5 +1,5 @@
+import { getOAuthClient } from '$lib/server/auth/atp_oauth';
 import { redirect } from '@sveltejs/kit';
-import { getOAuthClient } from '$lib/server/atp_oauth';
 
 export async function GET({ url }) {
 	const oauth = await getOAuthClient();
