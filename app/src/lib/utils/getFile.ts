@@ -2,7 +2,7 @@
 
 // import { sha256 } from 'multiformats/hashes/sha2'
 // import { CID } from 'multiformats/cid'
-import { pool } from '$lib/database/connectionPool.svelte'
+// import { pool } from '$lib/database/connectionPool.svelte'
 import type { Action } from 'svelte/action'
 import { media } from '$lib/data/maps.svelte'
 import { browser } from '$app/environment'
@@ -50,10 +50,10 @@ const cacheFile = async (filename: string) => {
   // move file to final location. update reference in database
   // handle.move(cid.toString())
   const { record } = await import('$lib/database/events')
-  pool.exec(async (db) => {
+  /* pool.exec(async (db) => {
     // console.log(cid.toString(), filename)
     // await record(db, { type: 'save', data: { url: cid.toString(), original: filename }, objectId: 'block:image' })
-  })
+  }) */
   // return cid.toString()
 }
 

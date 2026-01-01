@@ -4,8 +4,8 @@
 	import { naturalDate } from '$lib/utils/naturalDate'
 	import { handleFile } from '$lib/utils/getFile'
 	import { fade } from 'svelte/transition'
-	import type { Entry } from '$lib/pools/block.svelte'
 	import { micromark } from 'micromark'
+	import type { Entry } from '$lib/data/types'
 
 	let { block: b }: { block: Entry } = $props()
 
