@@ -13,12 +13,12 @@
 	const tree = getTree()
 
 	let previous = $derived.by(() => {
-		if ($tree.at(-1)?.route.id === '/') return // all channels
+		if (tree.at(-1)?.route.id === '/') return // all channels
 
 		// if nested in a channel show the content of the parent channel
 		// select all blocks with a connection (child id to the given channel
-		if ($tree.at(-1) && 'channel' in $tree.at(-1)?.params)
-			return channels.get($tree.at(-1).params.channel).blocks
+		if (tree.at(-1) && 'channel' in tree.at(-1)?.params)
+			return channels.get(tree.at(-1).params.channel).blocks
 		return
 	})
 
