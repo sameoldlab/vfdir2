@@ -30,9 +30,9 @@ export type ArenaConnectionEventData = {
 export interface Base {
   key: string
   /** serialize data for storage */
-  write: () => string
+  // write: () => string
   /** read data from JSON string to create object */
-  read: (value: string) => Base
+  // read: (value: string) => Base
 }
 
 export interface Collection extends Base {
