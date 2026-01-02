@@ -18,7 +18,7 @@ export interface AuthService<TSession = string | object, Kind = 'oauth2' | 'atpr
   authorize(
     ctx: AuthContext,
     options: {
-      deviceUid: string;
+      sessionKey: string;
       returnTo?: string;
     }
   ): Promise<{ url: string; state: string }>;
@@ -30,7 +30,7 @@ export interface AuthService<TSession = string | object, Kind = 'oauth2' | 'atpr
   ): Promise<{
     session: string;
     expiresAt: number,
-    userId?: string | number;
+    userId: string | number;
     displayName?: string;
   }>;
 

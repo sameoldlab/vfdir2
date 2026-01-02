@@ -9,6 +9,8 @@
  */
 
 import type * as crons from "../crons.js";
+import type * as data from "../data.js";
+import type * as groups from "../groups.js";
 import type * as oauth from "../oauth.js";
 
 import type {
@@ -19,6 +21,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   crons: typeof crons;
+  data: typeof data;
+  groups: typeof groups;
   oauth: typeof oauth;
 }>;
 

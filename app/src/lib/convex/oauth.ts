@@ -1,6 +1,8 @@
+import { customMutation, customQuery } from "convex-helpers/server/customFunctions";
 import { internal } from "./_generated/api";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { SessionIdArg } from "convex-helpers/server/sessions";
 
 const SERVICE_KIND = v.union(
   v.literal('arena'),
@@ -8,48 +10,61 @@ const SERVICE_KIND = v.union(
   v.literal('raindrop'),
 );
 
-// Devices
-export const getOrCreateDevice = mutation({
-  args: { uid: v.string() },
-  handler: async (ctx, { uid }) => {
-    const existing = await ctx.db
-      .query('devices')
-      .withIndex('by_uid', (q) => q.eq('uid', uid))
-      .first()
+const serverMutate = customMutation(mutation, {
+  args: { cvx_secret: v.string() },
+  input: async (ctx, { cvx_secret }) => {
 
-    if (existing) return existing._id;
-    const newDev = await ctx.db.insert('devices', { uid })
-    return newDev
+    if (cvx_secret !== (import.meta as unknown as { env: Record<string, string> }).env.CLIENT_SECRET) throw new Error('server only function')
+    return {
+      ctx,
+      args: {}
+    }
   },
 })
 
-export const getDevice = query({
-  args: { uid: v.string() },
-  handler: async (ctx, { uid }) => {
-    return await ctx.db
-      .query('devices')
-      .withIndex('by_uid', (q) => q.eq('uid', uid))
-      .first()
+const serverQuery = customQuery(query, {
+  args: { cvx_secret: v.string() },
+  input: async (ctx, { cvx_secret }) => {
+    if (cvx_secret !== (import.meta as unknown as { env: Record<string, string> }).env.CLIENT_SECRET) throw new Error('server only function')
+    return {
+      ctx,
+      args: {}
+    }
+  },
+})
+
+// Sessions
+export const createSession = mutation({
+  args: { key: v.string() },
+  handler: async (ctx, { key }) => {
+    const existing = await ctx.db
+      .query('sessions')
+      .withIndex('by_key', (q) => q.eq('key', key))
+      .unique()
+
+    if (existing) return true
+    await ctx.db.insert('sessions', { key })
+    return true
   },
 })
 
 // Connections
-export const getServiceConnection = query({
+export const getServiceConnection = serverQuery({
   args: {
-    deviceUid: v.string(),
+    sessionKey: v.string(),
     service: SERVICE_KIND,
   },
-  handler: async (ctx, { deviceUid, service }) => {
-    const device = await ctx.db
-      .query('devices')
-      .withIndex('by_uid', (q) => q.eq('uid', deviceUid))
-      .first()
-    if (!device) throw new Error('device not found')
+  handler: async (ctx, { sessionKey, service }) => {
+    const session = await ctx.db
+      .query('sessions')
+      .withIndex('by_key', (q) => q.eq('key', sessionKey))
+      .unique()
+    if (!session) return { error: 'no such session', code: 404 }
 
     const connection = await ctx.db
       .query("serviceConnections")
-      .withIndex("by_deviceId_service", (q) =>
-        q.eq("deviceId", device._id).eq("service", service)
+      .withIndex("by_sessionId_service", (q) =>
+        q.eq("sessionId", session._id).eq("service", service)
       )
       .first();
 
@@ -62,85 +77,94 @@ export const getServiceConnection = query({
 
     return {
       userId: connection.userId,
-      displayName: connection.displayName,
-      session: connection.session,
+      access_key: connection.access_key,
     };
   },
 });
 
-export const getAllServiceConnections = query({
-  args: { deviceId: v.id("devices") },
-  handler: async (ctx, { deviceId }) => {
-    const connections = await ctx.db
-      .query("serviceConnections")
-      .withIndex("by_deviceId", (q) => q.eq("deviceId", deviceId))
-      .collect();
+export const getAllServices = serverQuery({
+  args: { sessionKey: v.string() },
+  handler: async (ctx, { sessionKey }) => {
+    const session = await ctx.db
+      .query('sessions')
+      .withIndex('by_key', (q) => q.eq('key', sessionKey))
+      .unique()
+    if (!session) return { error: 'no such session', code: 404 }
 
     const now = Date.now();
-    return connections
-      .filter(c => !c.expiresAt || c.expiresAt > now)
-      .map(c => ({
-        service: c.service,
-        userId: c.userId,
-        displayName: c.displayName,
-      }));
+    const services = await ctx.db
+      .query("serviceConnections")
+      .filter(q => q.or(q.neq(q.field('expiresAt'), undefined), q.gt(q.field('expiresAt'), now)))
+      .withIndex("by_sessionId_service", (q) => q.eq("sessionId", session._id))
+      .collect();
+
+    const connections = await Promise.all(services.map(async (s) => {
+      const u = (await ctx.db.get(s.userId))!
+      return { service: s.service, userId: u.id, displayName: u.displayName }
+    }))
+
+    return connections;
   },
 });
 
-export const setServiceConnection = mutation({
+export const setServiceConnection = serverMutate({
   args: {
-    deviceUid: v.string(),
+    sessionKey: v.string(),
     service: SERVICE_KIND,
-    userId: v.optional(v.union(v.string(), v.number())),
-    displayName: v.optional(v.string()),
+    userId: v.union(v.string(), v.number()),
+    displayName: v.string(),
     session: v.string(),
     expiresAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { deviceUid, service } = args
-    const device = await ctx.db
-      .query('devices')
-      .withIndex('by_uid', (q) => q.eq('uid', deviceUid))
+    const { sessionKey, service } = args
+    const session = await ctx.db
+      .query('sessions')
+      .withIndex('by_key', (q) => q.eq('key', sessionKey))
       .first()
-    if (!device) throw new Error('device not found')
+    if (!session) return { error: 'no such session', code: 404 }
 
     const existing = await ctx.db
       .query("serviceConnections")
-      .withIndex("by_deviceId_service", (q) =>
-        q.eq("deviceId", device._id).eq("service", service)
+      .withIndex("by_sessionId_service", (q) =>
+        q.eq("sessionId", session._id).eq("service", service)
       )
       .first();
 
+    const userId = await ctx.db.insert('users', {
+      displayName: args.displayName,
+      id: args.userId,
+      service: service
+    })
+
     if (existing) {
       await ctx.db.patch(existing._id, {
-        userId: args.userId,
-        displayName: args.displayName,
-        session: args.session,
+        userId,
+        access_key: args.session,
         expiresAt: args.expiresAt,
       });
     } else {
       await ctx.db.insert("serviceConnections", {
-        deviceId: device._id,
+        sessionId: session._id,
         service: args.service,
-        userId: args.userId,
-        displayName: args.displayName,
-        session: args.session,
+        userId,
+        access_key: args.session,
         expiresAt: args.expiresAt,
       });
     }
   },
 });
 
-export const deleteServiceConnection = mutation({
+export const deleteServiceConnection = serverMutate({
   args: {
-    deviceId: v.id("devices"),
+    sessionKey: v.id("sessions"),
     service: SERVICE_KIND,
   },
-  handler: async (ctx, { deviceId, service }) => {
+  handler: async (ctx, { sessionKey, service }) => {
     const connection = await ctx.db
       .query("serviceConnections")
-      .withIndex("by_deviceId_service", (q) =>
-        q.eq("deviceId", deviceId).eq("service", service)
+      .withIndex("by_sessionId_service", (q) =>
+        q.eq("sessionId", sessionKey).eq("service", service)
       )
       .first();
 
@@ -150,38 +174,51 @@ export const deleteServiceConnection = mutation({
   },
 });
 
-/** Find other devices that have this service connected */
+/** Find other sessions that have this service connected */
 export const findRelatedConnections = query({
   args: {
-    currentDeviceId: v.id("devices"),
+    sessionKey: v.id("sessions"),
     service: SERVICE_KIND,
     userId: v.string(),
   },
-  handler: async (ctx, { currentDeviceId, service, userId }) => {
-    // Find all devices with this service account
+  handler: async (ctx, { sessionKey, service, userId }) => {
+    const session = await ctx.db
+      .query('sessions')
+      .withIndex('by_key', (q) => q.eq('key', sessionKey))
+      .unique()
+    if (!session) return { error: 'no such session', code: 404 }
+
+    const u = await ctx.db.query('users').withIndex("by_uid", q => q.eq('id', userId)).unique()
+    if (!u) return { error: 'user not found', code: 404 }
+
+    // Find all sesions with this service account
     const connections = await ctx.db
       .query("serviceConnections")
       .withIndex("by_service_userId", (q) =>
-        q.eq("service", service).eq("userId", userId)
+        q.eq("service", service).eq("userId", u._id)
       )
       .collect();
 
-    // Get all other services connected on those devices (excluding current device)
-    const suggestions = new Map<string, { service: string; displayName: string }>();
+    // Get all other services connected on those sessions (excluding current)
+    const suggestions = new Map<string, { service: string; user: { name: string, id: string | number } }>();
 
     for (const conn of connections) {
-      if (conn.deviceId === currentDeviceId) continue;
+      if (conn.sessionId === sessionKey) continue;
 
       const otherServices = await ctx.db
         .query("serviceConnections")
-        .withIndex("by_deviceId", (q) => q.eq("deviceId", conn.deviceId))
+        .withIndex("by_sessionId_service", (q) => q.eq("sessionId", conn.sessionId))
         .collect();
 
       for (const other of otherServices) {
         if (other.service !== service && !other.expiresAt || (other.expiresAt && other.expiresAt > Date.now())) {
-          suggestions.set(other.service, {
+          const u = await ctx.db.get(other.userId)
+          if (u) suggestions.set(other.service, {
             service: other.service,
-            displayName: other.displayName ?? '',
+            user: {
+              name: u.displayName ?? '',
+              id: u.id
+            }
           });
         }
       }
@@ -216,7 +253,7 @@ export const cleanupExpired = internalMutation({
 // OAUTH STATES
 // ============================================================================
 
-export const getOAuthState = query({
+export const getOAuthState = serverQuery({
   args: { stateId: v.string() },
   handler: async (ctx, { stateId }) => {
     const state = await ctx.db
@@ -231,26 +268,32 @@ export const getOAuthState = query({
     }
 
     return {
-      service: state.service,
-      deviceId: state.deviceId,
+      // service: state.service,
+      sessionId: state.sessionId,
       state: state.state,
     };
   },
 });
 
-export const setOAuthState = mutation({
+export const setOAuthState = serverMutate({
   args: {
     stateId: v.string(),
     service: SERVICE_KIND,
-    deviceId: v.id("devices"),
+    sessionKey: v.string(),
     state: v.string(),
     expiresAt: v.number(),
   },
   handler: async (ctx, args) => {
+    const session = await ctx.db
+      .query('sessions')
+      .withIndex('by_key', (q) => q.eq('key', args.sessionKey))
+      .unique()
+    if (!session) return { error: 'no such session', code: 404 }
+
     const stateId = await ctx.db.insert("oauthStates", {
       stateId: args.stateId,
       service: args.service,
-      deviceId: args.deviceId,
+      sessionId: session._id,
       state: args.state,
       expiresAt: args.expiresAt,
     });
