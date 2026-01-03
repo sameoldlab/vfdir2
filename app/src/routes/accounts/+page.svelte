@@ -2,7 +2,15 @@
 	import { enhance } from '$app/forms'
 	import ArenaIcon from '$lib/components/svg/arena.svelte'
 	import RaindropIcon from '$lib/components/svg/raindrop.svelte'
-	const params = [
+	import { api } from '$lib/convex/_generated/api'
+	import { getSession } from '$lib/utils/session'
+	import { useQuery } from 'convex-svelte'
+
+	const sessionKey = getSession()
+	const connections = useQuery(api.oauth.getAllServices, {
+		sessionId: sessionKey.v
+	})
+	const params = ([
 		{
 			label: 'are.na',
 			service: 'arena',
@@ -13,23 +21,29 @@
 			service: 'raindrop',
 			icon: RaindropIcon
 		}
-	]
+	])
 </script>
 
 <form method="POST" use:enhance>
 	<div class="form">
 		<p class="text-7">Jack in your mortal coil(s)</p>
-		<div class="row full">
-			{#each params as { label, service, icon: Icon } (label)}
-				<button
-					formaction="/oauth/{service}"
-					class="btn"
-				>
-					<Icon />
-					<span>{label}</span></button
-				>
-			{/each}
-		</div>
+		{#each params as { label, service, icon: Icon } (label)}
+			{@const cap = connections.data?.find(v => v.service === service)}
+			{#if cap}
+				<div class="row ">
+					<Icon /> {label} 
+					| {cap.displayName}
+					<div class="spacer"></div>
+					<button>disconnect</button>
+				</div>
+
+			{:else}
+			<button formaction="/oauth/{service}" class="btn " disabled={!!cap} class:connected={cap}>
+				<Icon />
+				<span>{label}</span>
+			</button>
+			{/if}
+		{/each}
 		<div class="row">
 			<hr />
 			or
@@ -115,7 +129,14 @@
 		}
 	}
 	button:disabled {
-		opacity: .3;
+		opacity: 0.3;
 		cursor: not-allowed;
+	}
+	.connected {
+		background: oklch(from var(--b3) l calc(c + 0.07) 120);
+		opacity: 0.3;
+	}
+	.spacer {
+		flex-grow: 1;
 	}
 </style>

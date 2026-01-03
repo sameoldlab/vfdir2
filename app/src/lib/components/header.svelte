@@ -75,10 +75,10 @@
 		<button class="text-6" popovertarget={addChannelId} onclick={() => {}}
 			>+ New<kbd>N</kbd></button
 		>
-		<button class="text-6" popovertarget={addChannelId} onclick={() => {}}
+		<!-- <button class="text-6" popovertarget={addChannelId} onclick={() => {}}
 			>Menu
-		</button>
-		<a href="/login" class="text-6">Login
+		</button> -->
+		<a href="/login" class="text-6">Accounts
 		</a>
 	</div>
 </header>
