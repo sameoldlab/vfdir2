@@ -2,7 +2,6 @@ import { customMutation, customQuery } from "convex-helpers/server/customFunctio
 import { internal } from "./_generated/api";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { SessionIdArg } from "convex-helpers/server/sessions";
 
 const SERVICE_KIND = v.union(
   v.literal('arena'),
@@ -14,7 +13,7 @@ const serverMutate = customMutation(mutation, {
   args: { cvx_secret: v.string() },
   input: async (ctx, { cvx_secret }) => {
 
-    if (cvx_secret !== (import.meta as unknown as { env: Record<string, string> }).env.CLIENT_SECRET) throw new Error('server only function')
+    if (cvx_secret !== process.env.SERVER_SECRET) throw new Error(`server only function. got value ${cvx_secret} expected ${process.env.CLIENT_SECRET} `)
     return {
       ctx,
       args: {}
@@ -25,7 +24,7 @@ const serverMutate = customMutation(mutation, {
 const serverQuery = customQuery(query, {
   args: { cvx_secret: v.string() },
   input: async (ctx, { cvx_secret }) => {
-    if (cvx_secret !== (import.meta as unknown as { env: Record<string, string> }).env.CLIENT_SECRET) throw new Error('server only function')
+    if (cvx_secret !== process.env.SERVER_SECRET) throw new Error(`server only function. got value ${cvx_secret} expected ${process.env.CLIENT_SECRET} `)
     return {
       ctx,
       args: {}

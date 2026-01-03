@@ -34,6 +34,7 @@
 		"@tauri-apps/cli": "^2.9.6",
 		"@testing-library/svelte": "~5.3.1",
 		"@tsconfig/svelte": "^5.0.6",
+		"@types/node": "^24.5.0",
 		"@types/wicg-file-system-access": "^2023.10.7",
 		"@vitest/browser": "^4.0.16",
 		"@vlcn.io/crsqlite-wasm": "^0.16.0",
