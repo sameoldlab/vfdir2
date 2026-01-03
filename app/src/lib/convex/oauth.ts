@@ -2,6 +2,7 @@ import { customMutation, customQuery } from "convex-helpers/server/customFunctio
 import { internal } from "./_generated/api";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { queryWithSession } from "./data";
 
 const SERVICE_KIND = v.union(
   v.literal('arena'),
@@ -81,24 +82,11 @@ export const getServiceConnection = serverQuery({
   },
 });
 
-export const getAllServices = serverQuery({
-  args: { sessionKey: v.string() },
-  handler: async (ctx, { sessionKey }) => {
-    const session = await ctx.db
-      .query('sessions')
-      .withIndex('by_key', (q) => q.eq('key', sessionKey))
-      .unique()
-    if (!session) return { error: 'no such session', code: 404 }
-
-    const now = Date.now();
-    const services = await ctx.db
-      .query("serviceConnections")
-      .filter(q => q.or(q.neq(q.field('expiresAt'), undefined), q.gt(q.field('expiresAt'), now)))
-      .withIndex("by_sessionId_service", (q) => q.eq("sessionId", session._id))
-      .collect();
-
-    const connections = await Promise.all(services.map(async (s) => {
-      const u = (await ctx.db.get(s.userId))!
+export const getAllServices = queryWithSession({
+  args: {},
+  handler: async (ctx) => {
+    const connections = await Promise.all(ctx.services.map(async (s) => {
+      const u = (await ctx.db.get(s.user))!
       return { service: s.service, userId: u.id, displayName: u.displayName }
     }))
 

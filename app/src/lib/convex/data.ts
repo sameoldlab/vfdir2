@@ -30,21 +30,25 @@ import { SessionIdArg } from "convex-helpers/server/sessions";
 //   },
 // })
 
-const queryWithSession = customQuery(query, {
-  args: SessionIdArg,
+export const queryWithSession = customQuery(query, {
+  args: { sessionId: v.string() },
   input: async (ctx, { sessionId }) => {
     const session = await ctx.db.query('sessions')
       .withIndex('by_key', q => q.eq("key", sessionId))
       .unique()
     if (!session) throw new Error('no session found')
 
-    const caps = await ctx.db.query('serviceConnections')
+    const now = Date.now()
+    const services = (await ctx.db.query('serviceConnections')
       .withIndex('by_sessionId_service', q => q.eq("sessionId", session._id))
-      .collect()
-    const ids = [...new Set(caps.map(c => c.userId))]
+      .filter(q => q.or(q.neq(q.field('expiresAt'), undefined), q.gt(q.field('expiresAt'), now)))
+      .collect()).map(s => ({
+        user: s.userId,
+        service: s.service
+      }))
 
     return {
-      ctx: { ...ctx, ids },
+      ctx: { ...ctx, services },
       args: {}
     }
   },
