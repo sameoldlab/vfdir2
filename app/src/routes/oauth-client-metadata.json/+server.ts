@@ -1,9 +1,11 @@
-import { getOAuthClient } from '$lib/server/auth/atp_oauth';
 import type { RequestHandler } from './$types';
 import { json } from '@sveltejs/kit';
 
-export const GET: RequestHandler = async () => {
-  const client = await getOAuthClient();
+export const GET: RequestHandler = async ({ locals }) => {
+  const { ctx } = locals
+  const atpService = ctx.services.get('atproto')
+
+  const client = await atpService.getClient(ctx)
 
   return json(client.metadata, {
     headers: {

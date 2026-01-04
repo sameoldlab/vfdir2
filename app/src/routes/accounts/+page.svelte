@@ -10,7 +10,7 @@
 	const connections = useQuery(api.oauth.getAllServices, {
 		sessionId: sessionKey.v
 	})
-	const params = ([
+	const params = [
 		{
 			label: 'are.na',
 			service: 'arena',
@@ -21,34 +21,38 @@
 			service: 'raindrop',
 			icon: RaindropIcon
 		}
-	])
+	]
 </script>
 
-<form method="POST" use:enhance>
-	<div class="form">
-		<p class="text-7">Jack in your mortal coil(s)</p>
-		{#each params as { label, service, icon: Icon } (label)}
-			{@const cap = connections.data?.find(v => v.service === service)}
-			{#if cap}
-				<div class="row ">
-					<Icon /> {label} 
-					| {cap.displayName}
-					<div class="spacer"></div>
-					<button>disconnect</button>
-				</div>
-
-			{:else}
-			<button formaction="/oauth/{service}" class="btn " disabled={!!cap} class:connected={cap}>
+<div class="form">
+	<p class="text-7">Jack in your mortal coil(s)</p>
+	{#each params as { label, service, icon: Icon } (label)}
+		{@const cap = connections.data?.find((v) => v.service === service)}
+		{#if cap}
+			<div class="row">
+				<Icon />
+				{label}
+				| {cap.displayName}
+				<div class="spacer"></div>
+				<a href="/oauth/{service}/?revoke">disconnect</a>
+			</div>
+		{:else}
+			<a
+				type="button"
+				href="/oauth/{service}?/connect"
+				class="btn"
+			>
 				<Icon />
 				<span>{label}</span>
-			</button>
-			{/if}
-		{/each}
-		<div class="row">
-			<hr />
-			or
-			<hr />
-		</div>
+			</a>
+		{/if}
+	{/each}
+	<div class="row">
+		<hr />
+		or
+		<hr />
+	</div>
+	<form method="POST" action="/oauth/atproto?/connect" use:enhance>
 		<label for="atproto-connect">
 			<div class="row">
 				<span class="text-5"
@@ -60,9 +64,11 @@
 			</div>
 			<input type="text" name="atproto-connect" placeholder="cool-site.me" />
 		</label>
-		<button class="btn text-4" type="submit">continue.</button>
-	</div>
-</form>
+	</form>
+	<button class="btn text-4" formaction="/oauth/atproto?/connect" type="submit"
+		>continue.</button
+	>
+</div>
 
 <style>
 	.form {
@@ -105,10 +111,15 @@
 		}
 	}
 	input {
-		background: transparent;
-		color: var(--b5);
-		border: 1px solid oklch(from var(--line) l c h / 0.7);
+		background: var(--b2);
+		color: var(--b7);
+		font-weight: 500;
+		border: 1px solid oklch(from var(--line) l c h / 0.5);
 		padding: 0.5rem 1rem;
+		&:active, &:selected, &:focus {
+			border: 1px solid oklch(from var(--b7) l c h / 1);
+			outline: none;
+		}
 	}
 	.info {
 		border: 1px solid var(--line);
@@ -138,5 +149,11 @@
 	}
 	.spacer {
 		flex-grow: 1;
+	}
+	.btn {
+		cursor: pointer;
+		&:hover {
+			background-color: var(--b3);
+		}
 	}
 </style>

@@ -1,27 +1,31 @@
 import type { api } from "$lib/convex/_generated/api";
+import type { ActorIdentifier } from "@atcute/lexicons";
+import type { OAuthClient, OAuthSession } from "@atcute/oauth-node-client";
 import type { ConvexHttpClient } from "convex/browser";
 
-export type ServiceName = 'atproto' | 'arena' | 'raindrop'
+export type ServiceName = 'arena' | 'raindrop'
 export type SessionCapabilities = ServiceName[]
 
 export type AuthContext = {
   convex: ConvexHttpClient;
   authApi: typeof api.oauth;
   /** Looks up connected data providers */
-  services: Map<ServiceName, AuthService>;
+  services: Map<ServiceName, AuthService<'oauth2'>> & Map<'atproto', AuthService<'atproto', OAuthSession>>;
 }
 
-export interface AuthService<TSession = string | object, Kind = 'oauth2' | 'atproto'> {
-  name: ServiceName
-  auth_url: string
-
-  authorize(
+export interface AuthService<Kind extends 'oauth2' | 'atproto', TSession = string | object,> {
+  name: 'atproto' | ServiceName
+  auth_url?: Kind extends 'oauth2' ? string : never
+  getClient?: Kind extends 'oauth2' ? never : (ctx: AuthContext) => Promise<OAuthClient>
+  authorize?: Kind extends 'oauth2' ? never : (
     ctx: AuthContext,
     options: {
       sessionKey: string;
-      returnTo?: string;
+      returnTo: string;
+      identifier?: ActorIdentifier
+      serviceUrl?: string
     }
-  ): Promise<{ url: string; state: string }>;
+  ) => Promise<{ url: string; stateId: string }>;
 
   /** handles oauth redirect uri */
   callback(
@@ -29,7 +33,7 @@ export interface AuthService<TSession = string | object, Kind = 'oauth2' | 'atpr
     params: URLSearchParams
   ): Promise<{
     session: string;
-    expiresAt: number,
+    expiresAt?: number,
     userId: string | number;
     displayName?: string;
   }>;

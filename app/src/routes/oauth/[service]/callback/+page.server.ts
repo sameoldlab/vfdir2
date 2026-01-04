@@ -5,5 +5,5 @@ import type { PageServerLoad } from '../$types';
 export const load: PageServerLoad = async ({ url, locals, params }) => {
 	await handleOAuth2Callback(locals.ctx, params.service, locals.deviceUid, url.searchParams)
 
-	redirect(302, '/');
+	redirect(302, '/accounts');
 }

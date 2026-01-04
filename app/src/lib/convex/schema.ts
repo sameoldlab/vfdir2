@@ -26,9 +26,6 @@ export default defineSchema({
 
   oauthStates: defineTable({
     stateId: v.string(),
-    /** device session */
-    sessionId: v.id("sessions"),
-    service: SERVICE_KIND,
     state: v.string(),
     expiresAt: v.number(),
   }).index("by_stateId", ["stateId"]),

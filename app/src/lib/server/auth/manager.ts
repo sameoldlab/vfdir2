@@ -1,4 +1,4 @@
-import type { ServiceName, AuthContext } from './types';
+import type { ServiceName, AuthContext, AuthService } from './types';
 
 export const ensureDevice = (ctx: AuthContext, key: string) =>
   ctx.convex.mutation(ctx.authApi.createSession, {
@@ -8,29 +8,6 @@ export const ensureDevice = (ctx: AuthContext, key: string) =>
 // =======================================
 // Oauth Flow
 // ======================================= 
-
-export function getOauth2Url(ctx: AuthContext, service: ServiceName) {
-  const authService = ctx.services.get(service)
-  if (!authService) throw new Error(`Service ${service} not configured`)
-
-  return authService.auth_url
-}
-
-export async function startOAuthFlow(ctx: AuthContext, service: ServiceName, opts: {
-  sessionKey: string
-  returnTo?: string
-}) {
-  await ensureDevice(ctx, opts.sessionKey)
-
-  const authService = ctx.services.get(service)
-  if (!authService) throw new Error(`Service ${service} not configured`)
-
-  const { url } = await authService.authorize(ctx, {
-    ...opts,
-  })
-
-  return url
-}
 
 /* export const handleOAuthCallback = async (ctx: AuthContext, service: ServiceName, params: URLSearchParams): Promise<{
   sessionKey: string
@@ -73,4 +50,13 @@ export const handleOAuth2Callback = async (ctx: AuthContext, service: ServiceNam
     service,
     displayName: connection.displayName ?? '',
   })
+}
+
+export const revokeSession = async (ctx: AuthContext, service: ServiceName, sessionKey: string) => {
+  await ctx.convex.mutation(ctx.authApi.deleteServiceConnection, {
+    cvx_secret: import.meta.env.SERVER_SECRET,
+    sessionKey: sessionKey,
+    service,
+  })
+
 }

@@ -1,9 +1,18 @@
-import { redirect } from '@sveltejs/kit';
-import { getOauth2Url, startOAuthFlow } from '$lib/server/auth/manager';
-import type { Actions } from './$types';
+import { error, redirect } from '@sveltejs/kit';
+import type { Actions, PageServerLoad } from './$types';
+
+export const load: PageServerLoad = ({ locals, params }) => {
+  const service = locals.ctx.services.get(params.service)
+  if (!service) error(402, `Service ${params.service} not configured`)
+
+  throw redirect(302, service.auth_url);
+}
 
 export const actions = {
-  default: async ({ locals, params }) => {
-    throw redirect(302, getOauth2Url(locals.ctx, params.service));
+  revoke: async ({ locals, params }) => {
+    const service = locals.ctx.services.get(params.service)
+    if (!service) error(402, `Service ${params.service} not configured`)
+    // service.revoke()
+
   }
 } satisfies Actions;

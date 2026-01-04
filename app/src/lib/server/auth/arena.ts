@@ -26,9 +26,6 @@ export const newArenaService = ({ clientId, clientSecret, redirect_uri }: {
 }): AuthService<AccessToken> => ({
   name: 'arena',
   auth_url: `https://www.are.na/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=code`,
-  authorize(ctx, options) {
-    return null
-  },
   async callback(ctx, params) {
     const code = params.get('code')
     if (!code) {
@@ -114,7 +111,7 @@ export const newArenaService = ({ clientId, clientSecret, redirect_uri }: {
 
     return session
   },
-  async revoke() { throw new Error('revoke not available for arena service') },
+  async revoke() { },
   serializeSession: (session) => session
   ,
 })

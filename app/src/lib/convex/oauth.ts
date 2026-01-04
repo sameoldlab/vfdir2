@@ -144,14 +144,20 @@ export const setServiceConnection = serverMutate({
 
 export const deleteServiceConnection = serverMutate({
   args: {
-    sessionKey: v.id("sessions"),
+    sessionKey: v.string(),
     service: SERVICE_KIND,
   },
   handler: async (ctx, { sessionKey, service }) => {
+    const session = await ctx.db
+      .query('sessions')
+      .withIndex('by_key', (q) => q.eq('key', sessionKey))
+      .unique()
+    if (!session) return { error: 'no such session', code: 404 }
+
     const connection = await ctx.db
       .query("serviceConnections")
       .withIndex("by_sessionId_service", (q) =>
-        q.eq("sessionId", sessionKey).eq("service", service)
+        q.eq("sessionId", session._id).eq("service", service)
       )
       .first();
 
@@ -240,7 +246,7 @@ export const cleanupExpired = internalMutation({
 // OAUTH STATES
 // ============================================================================
 
-export const getOAuthState = serverQuery({
+export const getAtpState = serverQuery({
   args: { stateId: v.string() },
   handler: async (ctx, { stateId }) => {
     const state = await ctx.db
@@ -254,39 +260,26 @@ export const getOAuthState = serverQuery({
       return null;
     }
 
-    return {
-      // service: state.service,
-      sessionId: state.sessionId,
-      state: state.state,
-    };
+    return state.state;
   },
 });
 
-export const setOAuthState = serverMutate({
+export const setAtpState = serverMutate({
   args: {
     stateId: v.string(),
-    service: SERVICE_KIND,
-    sessionKey: v.string(),
     state: v.string(),
     expiresAt: v.number(),
   },
   handler: async (ctx, args) => {
-    const session = await ctx.db
-      .query('sessions')
-      .withIndex('by_key', (q) => q.eq('key', args.sessionKey))
-      .unique()
-    if (!session) return { error: 'no such session', code: 404 }
 
     const stateId = await ctx.db.insert("oauthStates", {
       stateId: args.stateId,
-      service: args.service,
-      sessionId: session._id,
       state: args.state,
       expiresAt: args.expiresAt,
     });
 
     // TTL auto delete
-    await ctx.scheduler.runAt(args.expiresAt, internal.oauth.deleteOAuthState, {
+    await ctx.scheduler.runAt(args.expiresAt, internal.oauth.deleteAtpState, {
       stateId,
     });
 
@@ -294,7 +287,20 @@ export const setOAuthState = serverMutate({
   },
 });
 
-export const deleteOAuthState = internalMutation({
+export const deleteAtpStateEXT = serverMutate({
+  args: { stateId: v.string() },
+  handler: async (ctx, { stateId }) => {
+    const state = await ctx.db.query('oauthStates')
+      .withIndex('by_stateId', q => q.eq('stateId', stateId))
+      .unique()
+
+    if (state) {
+      await ctx.db.delete(state._id);
+    }
+  },
+});
+
+export const deleteAtpState = internalMutation({
   args: { stateId: v.id("oauthStates") },
   handler: async (ctx, { stateId }) => {
     const state = await ctx.db.get(stateId);
