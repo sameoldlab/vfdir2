@@ -76,31 +76,29 @@ class ConvexStore<T> {
   async clear() { }
 }
 
-export interface AtprotoConfig {
-  clientId: string;
-  jwksUri: string;
-  redirectUri: string;
-  privateKeyJwk: string;
+export interface AtpConfig {
+  client_name: string
+  domain: string
 }
-const initClient = async (ctx: AuthContext) => {
-  const DOMAIN = 'https://vfdir.same.supply'
+
+const initClient = async (ctx: AuthContext, { domain, client_name }: AtpConfig) => {
   const keyset = await Promise.all([importJwkKey(penv.PRIVATE_KEY_JWK)])
+  // const keyset = await Promise.all([importJwkKey('{"kty":"EC","x":"7Xae5nG0T81ZMXq7jMQ_7lU9m0WIXtTSNmN3l2ss6Xw","y":"G7vegWZOrFtHtQ17UbT1bSUgfmbZ5ti0X64j8jTRkxI","crv":"P-256","d":"sL11iKgTgo4zGUhKVi-TkOuho5P1LdvzVAo4rOPz3uQ","kid":"main","alg":"ES256"}')])
   return new OAuthClient({
     metadata: {
-      client_name: 'vfdir',
-      logo_uri: `${DOMAIN}/iconx32.png`,
-      client_id: `${DOMAIN}/oauth-client-metadata.json`,
-      redirect_uris: [`${DOMAIN}/oauth/atproto/callback`],
+      client_name,
+      logo_uri: `${domain}/iconx32.png`,
+      client_id: `${domain}/oauth-client-metadata.json`,
+      redirect_uris: [`${domain}/oauth/atproto/callback`],
+      jwks_uri: `${domain}/jwks.json`,
       scope: [
         // scope.include({ nsid: 'cosmik.network', aud: 'did:web:cosmik.network#d' }),
         scope.repo({
           collection: ['cosmik.network.card', 'cosmik.network.collectionLink', 'cosmik.network.collection'],
           action: ['create', 'update']
         }),
-        scope.rpc({ lxm: ['com.atproto.moderation.createReport'], aud: '*' }),
         scope.blob({ accept: ['*/*'] }),
       ],
-      jwks_uri: `${DOMAIN}/jwks.json`,
     },
     keyset,
     stores: {
@@ -125,20 +123,14 @@ const initClient = async (ctx: AuthContext) => {
   })
 }
 
-export interface AtpConfig {
-  clientId: string;
-  jwksUri: string;
-  redirectUri: string;
-  privateKeyJwk: string;
-}
 
 export function newAtpService(config: AtpConfig): AuthService<'atproto', OAuthSession> {
   let client: OAuthClient | null = null
   return {
     name: 'atproto',
-    getClient: async (ctx: AuthContext) => client ?? await initClient(ctx),
+    getClient: async (ctx: AuthContext) => client ?? await initClient(ctx, config),
     authorize: async (ctx, { sessionKey, returnTo, ...opts }) => {
-      client = client ?? await initClient(ctx)
+      client = client ?? await initClient(ctx, config)
       const identifier = opts.identifier
       const serviceUrl = opts.serviceUrl
       const target: AuthorizeTarget = identifier ? {
@@ -159,7 +151,7 @@ export function newAtpService(config: AtpConfig): AuthService<'atproto', OAuthSe
       return { url: url.toString(), stateId }
     },
     callback: async (ctx, params) => {
-      client = client ?? await initClient(ctx)
+      client = client ?? await initClient(ctx, config)
       const { session } = await client.callback(params)
 
       return {

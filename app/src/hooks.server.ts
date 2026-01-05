@@ -10,6 +10,7 @@ import { env as penv } from "$env/dynamic/private";
 import { api } from "$lib/convex/_generated/api";
 import { newArenaService } from "$lib/server/auth/arena";
 import { newRaindropService } from "$lib/server/auth/raindrop";
+import { newAtpService } from "$lib/server/auth/atproto";
 
 let ctx: AuthContext = null
 export const init = () => {
@@ -27,6 +28,10 @@ export const init = () => {
           clientId: env.PUBLIC_ARENA_CLIENT_ID,
           clientSecret: penv.ARENA_CLIENT_SECRET,
           redirect_uri: env.PUBLIC_ARENA_CALLBACK_URL
+        })],
+        ['atproto', newAtpService({
+          client_name: 'vfdir',
+          domain: 'https://vfdir.same.supply'
         })],
       ])
     }
