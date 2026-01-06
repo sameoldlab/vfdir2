@@ -5,6 +5,8 @@
     "useDefineForClassFields": true,
     "module": "ESNext",
     "moduleReoslution": "bundler",
+    "strictNullChecks": true,
+    "exactOptionalPropertyTypes": true,
     "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": true,
