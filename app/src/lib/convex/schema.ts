@@ -64,7 +64,8 @@ export default defineSchema({
     status: v.optional(v.union(v.literal('public'), v.literal('closed'), v.literal('private'))),
     // last_sync
   })
-    .index('by_service_id', ['service_id'])
+    .index('by_uid', ['service_id'])
+    .index('by_service_id', ['backing_service', 'service_id'])
     .index('by_author', ['author']),
 
 
@@ -76,6 +77,7 @@ export default defineSchema({
     connected_at: v.number(),
     connected_by: v.id('users')
   })
+    .index('by_connectedAt', ['connected_at'])
     .index('by_parent_child', ['p_id', 'c_id'])
     .index('by_child', ['c_id'])
 });

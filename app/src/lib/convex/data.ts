@@ -4,31 +4,7 @@ import { v } from "convex/values";
 import { mergedStream, stream } from "convex-helpers/server/stream";
 import schema from "./schema";
 import { Id } from "./_generated/dataModel";
-// import { queryWithSession } from '../utils/convexSessions'
 import { customQuery } from "convex-helpers/server/customFunctions";
-import { SessionIdArg } from "convex-helpers/server/sessions";
-
-// export const add = mutation({
-//   args: {
-//     link: v.optional(v.string()),
-//   },
-//   handler: async (ctx, { uid }) => {
-//     return await ctx.db
-//       .query('sessions')
-//       .withIndex('by_key', (q) => q.eq('key', key))
-//       .first()
-//   },
-// })
-
-// export const rm = mutation({
-//   args: { key: v.string() },
-//   handler: async (ctx, { key}) => {
-//     return await ctx.db
-//       .query('sessions')
-//       .withIndex('by_key', (q) => q.eq('key', key))
-//       .first()
-//   },
-// })
 
 export const queryWithSession = customQuery(query, {
   args: { sessionId: v.string() },
@@ -65,11 +41,14 @@ export const get = queryWithSession({
 })
 
 export const get_entry = query({
-  args: { key: v.string() },
-  handler: async (ctx, { key }) => {
+  args: {
+    key: v.string(),
+    service: v.string()
+  },
+  handler: async (ctx, { key, service }) => {
     return await ctx.db
       .query('entries')
-      .withIndex('by_service_id', (q) => q.eq('service_id', key))
+      .withIndex('by_service_id', (q) => q.eq('backing_service', service).eq('service_id', key))
       .filter((q) => q.eq(q.field('type'), 'group'))
       .unique()
   },
@@ -84,12 +63,19 @@ export const get_user_entries = query({
     const user = await ctx.db.query('users').withIndex("by_uid", q => q.eq('id', userId)).unique()
     if (!user) return []
 
-    return await ctx.db
+    return (await ctx.db
       .query('entries')
       .withIndex('by_author', q => q.eq('author', user._id))
       .order("asc")
       .filter((q) => q.neq(q.field('status'), 'private'))
-      .collect()
+      .collect()).map(q => ({
+        ...q,
+        key: q.service_id,
+        author: {
+          key: user.id,
+          displayName: user.displayName
+        }
+      }))
   },
 })
 
