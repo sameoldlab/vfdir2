@@ -57,7 +57,7 @@ export const get_contents = query({
     return await ctx.db
       .query('entries')
       .filter((q) => q.eq(q.field('type'), 'channel'))
-      .withIndex('by_service_id', (q) => q.eq('service_id', service_id))
+      .withIndex('by_uid', (q) => q.eq('service_id', service_id))
       .paginate(pagination)
   },
 })
