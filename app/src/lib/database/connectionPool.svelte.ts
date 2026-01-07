@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { dev } from '$app/environment'
 import initWasm, { type DB, type SQLite3 } from '@vlcn.io/crsqlite-wasm'
 import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
 import type { StmtAsync, TXAsync } from '@vlcn.io/xplat-api'
@@ -16,7 +17,7 @@ type Query<V> = {
 	setData: Data<V>
 }
 const log = (...args: unknown[]) => {
-	if (import.meta.env.DEV)
+	if (dev)
 		console.debug(...args)
 }
 
