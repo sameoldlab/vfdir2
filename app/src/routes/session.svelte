@@ -16,7 +16,7 @@
 		let localkey = localStorage.getItem('vfdir_sessionKey')
 		if (!localkey) {
 			localkey = 'ldev_' + ulid()
-			console.error('session creation starting')
+			console.debug('session creation starting')
 			const result = await client.mutation(api.oauth.createSession, {
 				key: localkey
 			})
@@ -28,15 +28,7 @@
 			session.v = localkey
 			localStorage.setItem('vfdir_sessionKey', session.v)
 		} else {
-			console.error('session creation starting')
-			const result = await client.mutation(api.oauth.createSession, {
-				key: localkey
-			})
-			if (!result) {
-				console.error('session creation failed')
-				return
-			}
-			console.log('session successful')
+			console.log('session retrieved')
 			session.v = localkey
 		}
 	}
