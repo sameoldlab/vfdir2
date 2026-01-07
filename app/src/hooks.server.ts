@@ -2,7 +2,7 @@ import type { Handle } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
 import type { Did } from "@atcute/lexicons";
 import { ulid } from "ulidx";
-import { ensureDevice, getCapabilities } from "$lib/server/auth/manager";
+import { ensureDevice } from "$lib/server/auth/manager";
 import type { AuthContext } from "$lib/server/auth/types";
 import { ConvexHttpClient } from "convex/browser";
 import { env } from "$env/dynamic/public";
@@ -38,26 +38,23 @@ export const init = () => {
   }
 }
 
-const sessionHandle: Handle = async ({ event, resolve }) => {
-  let did = event.cookies.get('atproto_did') as Did
+// const sessionHandle: Handle = async ({ event, resolve }) => {
+//   let did = event.cookies.get('atproto_did') as Did
 
-  if (did) {
-    try {
-      const oauth = await getOAuthClient()
-      const session = await oauth.restore(did)
-      event.locals.user = [session]
-      event.locals.did = did
-    } catch (err) {
-      console.error('Failed to resote atp session: ', err)
-      event.cookies.delete('atproto_did', { path: '/' })
-    }
-  }
+//   if (did) {
+//     try {
+//       const oauth = await getOAuthClient()
+//       const session = await oauth.restore(did)
+//       event.locals.user = [session]
+//       event.locals.did = did
+//     } catch (err) {
+//       console.error('Failed to resote atp session: ', err)
+//       event.cookies.delete('atproto_did', { path: '/' })
+//     }
+//   }
 
-  return resolve(event)
-}
-function getOAuthClient() {
-  throw new Error("Function not implemented.");
-}
+//   return resolve(event)
+// }
 
 const addAuthContext: Handle = async ({ event, resolve }) => {
   event.locals.ctx = ctx
@@ -82,7 +79,6 @@ const sessionManger: Handle = async ({ event, resolve }) => {
   try {
     let device = await ensureDevice(ctx, deviceUid)
     console.log({ device })
-    event.locals.capabilities = await getCapabilities(ctx, device)
   } catch (err) {
     console.error('Failed to load device: ', deviceUid)
     console.error(err)
