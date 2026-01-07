@@ -1,15 +1,16 @@
-import { error, redirect } from '@sveltejs/kit';
+import { error, json, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { ensureDevice } from '$lib/server/auth/manager';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
+  const result = await ensureDevice(locals.ctx, locals.deviceUid)
+  console.log({ ensureDevice: result })
+
   if (!(params.service === 'arena' || params.service === 'raindrop'))
     return error(400, `Service ${params.service} not supported`)
   const service = locals.ctx.services.get(params.service)
   if (!service) error(400, `Service ${params.service} not configured`)
 
-  const result = await ensureDevice(locals.ctx, locals.deviceUid)
-  console.log({ ensureDevice: result })
 
-  throw redirect(302, service.auth_url);
+  return json({ error: 'unimplemented' })
 }

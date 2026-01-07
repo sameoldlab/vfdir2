@@ -1,14 +1,10 @@
-import { getOAuthClient } from '$lib/server/auth/atp_oauth';
-import { redirect } from '@sveltejs/kit';
+import { redirect, type RequestHandler } from '@sveltejs/kit';
+// import { ensureDevice } from '$lib/server/auth/manager';
 
-export async function GET({ url }) {
-	const oauth = await getOAuthClient();
-	const handle = url.searchParams.get('handle');
+export const GET: RequestHandler = async ({ url, locals }) => {
+	const atp = locals.ctx.services.get('atproto')
 
-	const { url: authUrl } = await oauth.authorize({
-		target: { type: 'account', identifier: handle },
-		state: { returnTo: '/' },
-	});
+	const { userId: did, session } = await atp.callback(locals.ctx, url.searchParams);
 
-	throw redirect(302, authUrl.toString());
+	redirect(302, '/accounts');
 }
