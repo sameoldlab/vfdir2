@@ -2,14 +2,9 @@
 	import { enhance } from '$app/forms'
 	import ArenaIcon from '$lib/components/svg/arena.svelte'
 	import RaindropIcon from '$lib/components/svg/raindrop.svelte'
-	import { api } from '$lib/convex/_generated/api'
-	import { getSession } from '$lib/utils/session'
-	import { useQuery } from 'convex-svelte'
 
-	const sessionKey = getSession()
-	const connections = useQuery(api.oauth.getAllServices, {
-		sessionId: sessionKey.v
-	})
+	const { data } = $props()
+	const { connections } = $derived(data)
 	const params = [
 		{
 			label: 'are.na',
@@ -27,7 +22,7 @@
 <div class="form">
 	<p class="text-7">Jack in your mortal coil(s)</p>
 	{#each params as { label, service, icon: Icon } (label)}
-		{@const cap = connections.data?.find((v) => v.service === service)}
+		{@const cap = connections.find((v) => v.service === service)}
 		{#if cap}
 			<div class="row">
 				<Icon />
@@ -37,11 +32,7 @@
 				<a href="/oauth/{service}/revoke">disconnect</a>
 			</div>
 		{:else}
-			<a
-				type="button"
-				href="/oauth/{service}"
-				class="btn"
-			>
+			<a type="button" href="/oauth/{service}" class="btn">
 				<Icon />
 				<span>{label}</span>
 			</a>
@@ -65,9 +56,7 @@
 			<input type="text" name="atproto-connect" placeholder="cool-site.me" />
 		</label>
 	</form>
-	<button class="btn text-4" formaction="/oauth/atproto?/connect" type="submit"
-		>continue.</button
-	>
+	<button class="btn text-4" type="submit">continue.</button>
 </div>
 
 <style>
@@ -116,7 +105,9 @@
 		font-weight: 500;
 		border: 1px solid oklch(from var(--line) l c h / 0.5);
 		padding: 0.5rem 1rem;
-		&:active, &:selected, &:focus {
+		&:active,
+		&:selected,
+		&:focus {
 			border: 1px solid oklch(from var(--b7) l c h / 1);
 			outline: none;
 		}
