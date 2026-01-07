@@ -34,12 +34,12 @@
 				{label}
 				| {cap.displayName}
 				<div class="spacer"></div>
-				<a href="/oauth/{service}/?revoke">disconnect</a>
+				<a href="/oauth/{service}/revoke">disconnect</a>
 			</div>
 		{:else}
 			<a
 				type="button"
-				href="/oauth/{service}?/connect"
+				href="/oauth/{service}"
 				class="btn"
 			>
 				<Icon />
