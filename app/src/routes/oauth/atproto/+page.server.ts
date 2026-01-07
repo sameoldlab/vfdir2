@@ -1,11 +1,11 @@
 import { error, redirect } from '@sveltejs/kit';
-import { ensureDevice } from '$lib/server/auth/manager';
+import { ensureSession } from '$lib/server/auth/manager';
 import type { Actions } from './$types';
 import type { ActorIdentifier } from '@atcute/lexicons';
 
 export const actions = {
   connect: async ({ locals, request }) => {
-    const result = await ensureDevice(locals.ctx, locals.deviceUid)
+    const result = await ensureSession(locals.ctx, locals.deviceUid)
     if (!result) throw error(501, { message: JSON.stringify([{ error: 'no session' }]) })
 
     const identifier = (await request.formData()).get('atproto-connect')

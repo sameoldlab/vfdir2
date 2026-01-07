@@ -1,7 +1,7 @@
 import { env } from '$env/dynamic/private';
 import type { ServiceName, AuthContext, AuthService } from './types';
 
-export const ensureDevice = (ctx: AuthContext, key: string) =>
+export const ensureSession = (ctx: AuthContext, key: string) =>
   ctx.convex.mutation(ctx.authApi.createSession, {
     key
   })
