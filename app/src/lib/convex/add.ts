@@ -61,6 +61,7 @@ export const addEntries = mutation({
       // =========== TYPE SPECIFIC ==========
       // entry content for a 'note' block
       content: v.optional(v.string()),
+      url: v.optional(v.string()),
       filename: v.optional(v.string()),
       // entry content for a 'media' block
       media: v.optional(v.string()),

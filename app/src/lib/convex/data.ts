@@ -1,6 +1,6 @@
 import { paginationOptsValidator } from "convex/server";
 import { query } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mergedStream, stream } from "convex-helpers/server/stream";
 import schema from "./schema";
 import { Id } from "./_generated/dataModel";
@@ -57,15 +57,17 @@ export const get_entry = query({
 export const get_user_entries = query({
   args: {
     userId: v.union(v.string(), v.number()),
-    pagination: paginationOptsValidator
   },
-  handler: async (ctx, { pagination, userId }) => {
+  handler: async (ctx, { userId }) => {
     const user = await ctx.db.query('users').withIndex("by_uid", q => q.eq('id', userId)).unique()
-    if (!user) return []
+    if (!user) throw new ConvexError({
+      message: 'user not found',
+      code: 404
+    })
 
     return (await ctx.db
       .query('entries')
-      .withIndex('by_author', q => q.eq('author', user._id))
+      .withIndex('by_author_date', q => q.eq('author', user._id))
       .order("asc")
       .filter((q) => q.neq(q.field('status'), 'private'))
       .collect()).map(q => ({
@@ -102,7 +104,7 @@ export const get_my_entries = query({
     //   q.status !== 'private' || q.author == user
     // )
     const entries = (user: Id<'users'>) => stream(ctx.db, schema).query('entries')
-      .withIndex('by_author', q => q.eq('author', user))
+      .withIndex('by_author_date', q => q.eq('author', user))
 
     const merged = mergedStream(
       users.map(entries), []

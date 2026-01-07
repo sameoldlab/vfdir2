@@ -55,6 +55,7 @@ export default defineSchema({
     // =========== TYPE SPECIFIC ==========
     // entry content for a 'note' block
     content: v.optional(v.string()),
+    url: v.optional(v.string()),
     filename: v.optional(v.string()),
     // entry content for a 'media' block
     media: v.optional(v.string()),
@@ -66,7 +67,7 @@ export default defineSchema({
   })
     .index('by_uid', ['service_id'])
     .index('by_service_id', ['backing_service', 'service_id'])
-    .index('by_author', ['author']),
+    .index('by_author_date', ['author', 'created_at']),
 
 
   connections: defineTable({
