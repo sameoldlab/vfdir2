@@ -15,7 +15,7 @@ declare global {
 			user?: OAuthSession[]
 			did?: Did
 			ctx: AuthContext,
-			deviceUid: string
+			sessionKey: string
 			capabilities: SessionCapabilities
 		}
 		// interface Platform {}

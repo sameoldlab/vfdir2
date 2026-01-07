@@ -75,8 +75,8 @@ const sessionManger: Handle = async ({ event, resolve }) => {
   }
 
   try {
-    let device = await ensureSession(ctx, sessionKey)
-    if (device) event.locals.deviceUid = sessionKey
+    let session = await ensureSession(ctx, sessionKey)
+    if (session) event.locals.sessionKey = sessionKey
   } catch (err) {
     console.error('Failed to persist session: ', sessionKey, err)
     event.locals.capabilities = []

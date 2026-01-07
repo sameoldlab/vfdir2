@@ -5,7 +5,7 @@ import type { ActorIdentifier } from '@atcute/lexicons';
 
 export const actions = {
   connect: async ({ locals, request }) => {
-    const result = await ensureSession(locals.ctx, locals.deviceUid)
+    const result = await ensureSession(locals.ctx, locals.sessionKey)
     if (!result) throw error(501, { message: JSON.stringify([{ error: 'no session' }]) })
 
     const identifier = (await request.formData()).get('atproto-connect')
@@ -16,7 +16,7 @@ export const actions = {
     const atp = locals.ctx.services.get('atproto')
     const { url: authUrl } = await atp.authorize(locals.ctx, {
       returnTo: '',
-      sessionKey: locals.deviceUid,
+      sessionKey: locals.sessionKey,
       ...rest
     })
     console.log({ authUrl })
