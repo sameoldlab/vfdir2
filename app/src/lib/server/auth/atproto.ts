@@ -82,8 +82,7 @@ export interface AtpConfig {
 }
 
 const initClient = async (ctx: AuthContext, { domain, client_name }: AtpConfig) => {
-  const keyset = await Promise.all([importJwkKey(penv.PRIVATE_KEY_JWK)])
-  // const keyset = await Promise.all([importJwkKey('{"kty":"EC","x":"7Xae5nG0T81ZMXq7jMQ_7lU9m0WIXtTSNmN3l2ss6Xw","y":"G7vegWZOrFtHtQ17UbT1bSUgfmbZ5ti0X64j8jTRkxI","crv":"P-256","d":"sL11iKgTgo4zGUhKVi-TkOuho5P1LdvzVAo4rOPz3uQ","kid":"main","alg":"ES256"}')])
+  const keyset = await Promise.all([importJwkKey(JSON.parse(penv.KEY_JWK))])
   return new OAuthClient({
     metadata: {
       client_name,
