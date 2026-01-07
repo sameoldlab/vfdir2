@@ -1,8 +1,8 @@
 import type { Handle } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
-import type { Did } from "@atcute/lexicons";
+// import type { Did } from "@atcute/lexicons";
 import { ulid } from "ulidx";
-import { ensureDevice } from "$lib/server/auth/manager";
+import { ensureSession } from "$lib/server/auth/manager";
 import type { AuthContext } from "$lib/server/auth/types";
 import { ConvexHttpClient } from "convex/browser";
 import { env } from "$env/dynamic/public";
@@ -62,26 +62,23 @@ const addAuthContext: Handle = async ({ event, resolve }) => {
 }
 
 const sessionManger: Handle = async ({ event, resolve }) => {
-  let deviceUid = event.cookies.get('device_uid')
-  if (!deviceUid) {
-    deviceUid = 'dev_' + ulid()
-    event.cookies.set('device_uid', deviceUid, {
+  let sessionKey = event.cookies.get('vfdir_sessionKey')
+  if (!sessionKey) {
+    sessionKey = 'dev_' + ulid()
+    event.cookies.set('vfdir_sessionKey', sessionKey, {
       path: '/',
       httpOnly: true,
       secure: true,
       sameSite: 'strict',
-      maxAge: 365 * 24 * 120
+      maxAge: 365 * 24 * 1200
     })
   }
 
-  event.locals.deviceUid = deviceUid
-
   try {
-    let device = await ensureDevice(ctx, deviceUid)
-    console.log({ device })
+    let device = await ensureSession(ctx, sessionKey)
+    if (device) event.locals.deviceUid = sessionKey
   } catch (err) {
-    console.error('Failed to load device: ', deviceUid)
-    console.error(err)
+    console.error('Failed to persist session: ', sessionKey, err)
     event.locals.capabilities = []
   }
 

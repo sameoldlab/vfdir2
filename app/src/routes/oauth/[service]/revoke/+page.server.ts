@@ -1,9 +1,9 @@
 import { error, json, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { ensureDevice } from '$lib/server/auth/manager';
+import { ensureSession } from '$lib/server/auth/manager';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
-  const result = await ensureDevice(locals.ctx, locals.deviceUid)
+  const result = await ensureSession(locals.ctx, locals.deviceUid)
   console.log({ ensureDevice: result })
 
   if (!(params.service === 'arena' || params.service === 'raindrop'))
