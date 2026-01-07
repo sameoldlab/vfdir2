@@ -41,12 +41,9 @@ export const newRaindropService = ({ clientId: client_id, clientSecret: client_s
   clientId: string,
   clientSecret: string,
   redirect_uri: string,
-}): AuthService<RaindropSession> => ({
+}): AuthService<'oauth2', RaindropSession> => ({
   name: 'raindrop',
   auth_url: `https://raindrop.io/oauth/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}`,
-  authorize(ctx, options) {
-    return null
-  },
   async callback(ctx, params) {
     const code = params.get('code')
     if (!code) {
