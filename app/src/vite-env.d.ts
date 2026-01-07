@@ -4,9 +4,6 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  // dev
-  readonly VITE_DEVICE_KEY: string
-
   // production
   readonly ARENA_CLIENT_SECRET: string
   readonly VITE_ARENA_CLIENT_ID: string

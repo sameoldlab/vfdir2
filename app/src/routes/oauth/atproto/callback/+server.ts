@@ -1,5 +1,4 @@
 import { redirect, type RequestHandler } from '@sveltejs/kit';
-// import { ensureDevice } from '$lib/server/auth/manager';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
 	const atp = locals.ctx.services.get('atproto')

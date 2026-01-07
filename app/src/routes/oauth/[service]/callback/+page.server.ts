@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ url, locals, params }) => {
 
 	const existing = await ctx.convex.query(ctx.authApi.getServiceConnection, {
 		cvx_secret: env.SERVER_SECRET,
-		sessionKey: locals.deviceUid,
+		sessionKey: locals.sessionKey,
 		service
 	})
 	console.log({ existing: !!existing, service })
@@ -21,7 +21,7 @@ export const load: PageServerLoad = async ({ url, locals, params }) => {
 	if (!existing) await ctx.convex.mutation(ctx.authApi.setServiceConnection, {
 		cvx_secret: env.SERVER_SECRET,
 		...connection,
-		sessionKey: locals.deviceUid,
+		sessionKey: locals.sessionKey,
 		service,
 		displayName: connection.displayName ?? '',
 	})
