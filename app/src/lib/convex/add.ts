@@ -112,51 +112,59 @@ export const addEntries = mutation({
   },
 });
 
-
-export const connectEntry = mutation({
+export const connectEntries = mutation({
   args: {
-    pid: v.union(v.string(), v.id('entries')),
-    cid: v.union(v.string(), v.id('entries')),
     service: SERVICE_KIND,
-    position: v.optional(v.float64()),
-    pinned: v.optional(v.boolean()),
-    connected_at: v.number(),
-    connected_by: v.union(v.object({
-      displayName: v.string(),
-      id: v.string(),
-    }), v.id('users')),
+    connections: v.array(v.object({
+      pid: v.union(v.string(), v.id('entries')),
+      cid: v.union(v.string(), v.id('entries')),
+      position: v.optional(v.float64()),
+      pinned: v.optional(v.boolean()),
+      connected_at: v.number(),
+      connected_by: v.union(v.object({
+        displayName: v.string(),
+        id: v.string(),
+      }), v.id('users')),
+    }))
   },
-  handler: async (ctx, { pid, cid, service, position, pinned, connected_at, connected_by }) => {
+  handler: async (ctx, { service, connections }) => {
+    for (const { pid, cid, position, pinned, connected_at, connected_by } of connections) {
+      let userId: Id<'users'> | null = await ctx.runMutation(internal.add.get_or_create_user, {
+        service,
+        user: connected_by
+      })
+      if (!userId) {
+        console.error(`user not found: ${connected_by}`)
+        continue
+      }
 
-    let userId: Id<'users'> | null = await ctx.runMutation(internal.add.get_or_create_user, {
-      service,
-      user: connected_by
-    })
-    if (!userId) throw Error(`user not found: ${connected_by}`)
+      const p = await ctx.db.query('entries')
+        .withIndex("by_service_id", q => q
+          .eq("backing_service", service).eq('service_id', pid)
+        ).unique()
+      const p_id = p ?? (ctx.db.normalizeId('entries', pid) && await ctx.db.get(pid as Id<'entries'>))
 
-    const p = await ctx.db.query('entries')
-      .withIndex("by_service_id", q => q
-        .eq("backing_service", service).eq('service_id', pid)
-      ).unique()
-    const p_id = p ?? (ctx.db.normalizeId('entries', pid) && await ctx.db.get(pid as Id<'entries'>))
+      const c = await ctx.db.query('entries')
+        .withIndex("by_service_id", q => q
+          .eq("backing_service", service).eq('service_id', cid)
+        )
+        .unique()
+      const c_id = c ?? (ctx.db.normalizeId('entries', cid) && await ctx.db.get(cid as Id<'entries'>))
 
-    const c = await ctx.db.query('entries')
-      .withIndex("by_service_id", q => q
-        .eq("backing_service", service).eq('service_id', cid)
-      )
-      .unique()
-    const c_id = c ?? (ctx.db.normalizeId('entries', cid) && await ctx.db.get(cid as Id<'entries'>))
+      if (!p_id) {
+        console.error(`pid not found: ${pid}`)
+        continue
+      }
+      if (!c_id) {
+        console.error(`cid not found: ${cid}`)
+        continue
+      }
 
-    if (!p_id) throw Error(`pid not found: ${pid}`)
-    if (!c_id) throw Error(`cid not found: ${cid}`)
+      const existing = await ctx.db
+        .query('connections').withIndex("by_parent_child", q => q.eq("p_id", p_id._id).eq("c_id", c_id._id)).unique()
+      if (existing) continue
 
-    const existing = await ctx.db
-      .query('connections').withIndex("by_parent_child", q => q.eq("p_id", p_id._id).eq("c_id", c_id._id)).unique()
-    if (existing) {
-      return existing._id
-    }
-    const id: Id<'connections'> = await ctx.db
-      .insert('connections', {
+      await ctx.db.insert('connections', {
         p_id: p_id._id,
         c_id: c_id._id,
         position: position ?? Infinity,
@@ -164,6 +172,6 @@ export const connectEntry = mutation({
         connected_at,
         connected_by: userId
       })
-    return id
+    }
   },
 })

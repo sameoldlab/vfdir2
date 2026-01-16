@@ -138,7 +138,6 @@ const crawlCosmic = async (xrpc: Client, params: RecordParams) => {
         updated_at: v.createdAt ? new Date(v.createdAt).valueOf() : Date.now(),
       }
     })
-    console.log('ping')
     promises.push(convex.mutation(api.add.addEntries, { service: "atproto", entries }))
   }
 
@@ -170,25 +169,27 @@ const crawlCosmic = async (xrpc: Client, params: RecordParams) => {
     entries.set(ek as string, ev)
   })
 
+  const promises2: Promise<null>[] = []
   for await (const batch of listConnections(xrpc, params)) {
-    console.log('connecting...')
-    await Promise.all(batch.map(async ({ value: v }) => {
+    console.log(`connecting batch ${promises.length}`)
+    const connections = (await Promise.all(batch.map(async ({ value: v }) => {
       const ckey = atpKey(v.card.uri)
       const pkey = atpKey(v.collection.uri)
       const cid = entries.get(ckey)
       const pid = entries.get(pkey)
       if (!cid) console.warn('missing id for', { cid, ckey })
       if (!pid) console.warn('missing id for', { pid, pkey })
-
-      return await convex.mutation(api.add.connectEntry, {
+      return {
         cid: cid ?? ckey,
         pid: pid ?? pkey,
-        service: 'atproto',
         connected_at: new Date(v.addedAt).valueOf(),
         connected_by: users.get(params.repo) ?? { id: params.repo, displayName: params.repo },
-      }).catch(console.error);
-    }))
+      }
+    })))
+    promises2.push(convex.mutation(api.add.connectEntries, { service: 'atproto', connections }))
   }
+  await Promise.all(promises2)
+
   console.log('COMPLETE')
 }
 
