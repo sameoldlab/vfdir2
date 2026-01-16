@@ -6,9 +6,14 @@
 	import { api } from '$lib/convex/_generated/api'
 	// import { users } from '$lib/data/maps.svelte'
 	import { spiderUser } from '$lib/queries/listRecords.remote'
+	import { isActorIdentifier } from '@atcute/lexicons/syntax'
 	import type { Snapshot } from '@sveltejs/kit'
 	import { useQuery } from 'convex-svelte'
 	import { ConvexError } from 'convex/values'
+	import { untrack } from 'svelte'
+
+	const { data } = $props()
+	const { username } = $derived(page.params)
 
 	// const user = $derived(users.get(page.params.username))
 	// const data = $derived(user?.entries)
@@ -39,24 +44,31 @@
 		}, */
 		userId: page.params?.username ?? ''
 	})
-	const { username } = $derived(page.params)
 	$effect(() => {
-		if (
-			username &&
-			((username.startsWith('did:') && username.split(':')?.length === 3) ||
-				username.includes('.'))
-		)
-			spiderUser({ did: username })
+		if (data.actor)
+			untrack(() => {
+				spiderUser({ did: data.actor.did, pds: data.actor.pds })
+			})
 	})
 </script>
 
+<svelte:head>
+	<title>{data.actor?.handle ?? username} | vfdir</title>
+</svelte:head>
 {#if cvx_entries.isLoading}
-	...loading
+	loading...
 {:else if cvx_entries.error}
 	<div class="error">
 		{#if (cvx_entries.error as ConvexError<{ message: string; code: number }>).data.message === 'user not found'}
-			Could not find user: <code>{page.params.username}</code>.<br />
-			If this is an are.na user, try searching one of their channels instead.
+			Could not find user: <code>{username}</code>.<br />
+			{#if username && isActorIdentifier(username)}
+				Are you sure this did is correct? <a
+					href="https://pdsls.dev/at://{username}#collections:network.cosmik"
+					>Check on pdsls.dev</a
+				>
+			{:else}
+				If this is an are.na user, try searching one of their channels instead.
+			{/if}
 		{:else}
 			{cvx_entries.error}
 		{/if}
