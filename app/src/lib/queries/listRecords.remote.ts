@@ -8,6 +8,7 @@ import { env } from "$env/dynamic/public";
 import { api } from "$lib/convex/_generated/api";
 import { command } from "$app/server";
 import type { Id } from "$lib/convex/_generated/dataModel";
+import type { ResolvedActor } from '@atcute/identity-resolver';
 type RecordParams = { repo: ActorIdentifier, limit?: number, reverse?: boolean, cursor?: string }
 
 async function listRecords(xrpc: Client, params: { repo: ActorIdentifier, collection: `${string}.${string}.${string}`, limit?: number, reverse?: boolean, cursor?: string }) {
@@ -192,10 +193,11 @@ const crawlCosmic = async (xrpc: Client, params: RecordParams) => {
 }
 
 export const spiderUser = command(type({
-  did: "string"
-}), async ({ did }: { did: ActorIdentifier }) => {
+  did: "string",
+  pds: "string",
+}), async ({ did, pds }: Exclude<ResolvedActor, 'handle'>) => {
   const xrpc = new Client({
-    handler: simpleFetchHandler({ service: 'https://atp.same.supply' })
+    handler: simpleFetchHandler({ service: pds })
   })
   try {
     await crawlCosmic(xrpc, { repo: did, limit: 100, reverse: false })
