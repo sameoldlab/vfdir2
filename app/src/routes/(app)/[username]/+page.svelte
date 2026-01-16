@@ -6,14 +6,14 @@
 	import { api } from '$lib/convex/_generated/api'
 	// import { users } from '$lib/data/maps.svelte'
 	import { spiderUser } from '$lib/queries/listRecords.remote'
-	import { isActorIdentifier } from '@atcute/lexicons/syntax'
+	import { isActorIdentifier, isDid } from '@atcute/lexicons/syntax'
 	import type { Snapshot } from '@sveltejs/kit'
 	import { useQuery } from 'convex-svelte'
 	import { ConvexError } from 'convex/values'
 	import { untrack } from 'svelte'
 
 	const { data } = $props()
-	const { username } = $derived(page.params)
+	const username = $derived(data.service === 'atproto' ? data.actor.did : page.params.username)
 
 	// const user = $derived(users.get(page.params.username))
 	// const data = $derived(user?.entries)
@@ -37,15 +37,16 @@
 			y.val = value
 		}
 	}
-	const cvx_entries = useQuery(api.data.get_user_entries, {
+	const cvx_entries = $derived(useQuery(api.data.get_user_entries, {
 		/* pagination: {
 			numItems: 0,
 			cursor: null
 		}, */
-		userId: page.params?.username ?? ''
-	})
+		userId: username ?? ''
+	}))
+
 	$effect(() => {
-		if (data.actor)
+		if (data.service === 'atproto')
 			untrack(() => {
 				spiderUser({ did: data.actor.did, pds: data.actor.pds })
 			})
@@ -61,7 +62,7 @@
 	<div class="error">
 		{#if (cvx_entries.error as ConvexError<{ message: string; code: number }>).data.message === 'user not found'}
 			Could not find user: <code>{username}</code>.<br />
-			{#if username && isActorIdentifier(username)}
+			{#if data.service === 'atproto'}
 				Are you sure this did is correct? <a
 					href="https://pdsls.dev/at://{username}#collections:network.cosmik"
 					>Check on pdsls.dev</a

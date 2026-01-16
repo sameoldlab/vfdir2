@@ -4,15 +4,21 @@ import {
   LocalActorResolver,
   PlcDidDocumentResolver,
   WebDidDocumentResolver,
-  WellKnownHandleResolver
+  WellKnownHandleResolver,
+  type ResolvedActor
 } from "@atcute/identity-resolver"
 import type { PageServerLoad } from "./$types"
 import { isActorIdentifier } from "@atcute/lexicons/syntax"
 import { NodeDnsHandleResolver } from "@atcute/identity-resolver-node"
 
-export const load: PageServerLoad = async ({ params, fetch }) => {
+export const load: PageServerLoad = async ({ params }): Promise<{
+  service: 'arena' | 'raindrop' | 'unknown',
+} | {
+  service: 'atproto',
+  actor: ResolvedActor
+}> => {
   const { username } = params
-  if (!isActorIdentifier(username)) return
+  if (!isActorIdentifier(username)) return { service: 'arena' }
 
   const resolver = new LocalActorResolver({
     handleResolver: new CompositeHandleResolver({
@@ -30,8 +36,9 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
   })
   try {
     const actor = await resolver.resolve(username)
-    return { actor }
+    return { actor, service: 'atproto' as const }
   } catch (err) {
     console.error(err)
+    return { service: 'unknown' }
   }
 }
