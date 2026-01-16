@@ -1,7 +1,6 @@
 import {
   CompositeDidDocumentResolver,
   CompositeHandleResolver,
-  DohJsonHandleResolver,
   LocalActorResolver,
   PlcDidDocumentResolver,
   WebDidDocumentResolver,
@@ -9,6 +8,7 @@ import {
 } from "@atcute/identity-resolver"
 import type { PageServerLoad } from "./$types"
 import { isActorIdentifier } from "@atcute/lexicons/syntax"
+import { NodeDnsHandleResolver } from "@atcute/identity-resolver-node"
 
 export const load: PageServerLoad = async ({ params, fetch }) => {
   const { username } = params
@@ -17,14 +17,14 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
   const resolver = new LocalActorResolver({
     handleResolver: new CompositeHandleResolver({
       methods: {
-        dns: new DohJsonHandleResolver({ dohUrl: 'https://mozilla.cloudflare-dns.com/dns-query', fetch }),
-        http: new WellKnownHandleResolver({ fetch }),
+        dns: new NodeDnsHandleResolver(),
+        http: new WellKnownHandleResolver(),
       },
     }),
     didDocumentResolver: new CompositeDidDocumentResolver({
       methods: {
-        plc: new PlcDidDocumentResolver({ fetch }),
-        web: new WebDidDocumentResolver({ fetch }),
+        plc: new PlcDidDocumentResolver(),
+        web: new WebDidDocumentResolver(),
       },
     })
   })
