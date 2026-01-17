@@ -12,7 +12,7 @@
 </script>
 
 <div class="grid" class:raw>
-	{#each content as c, i (c._id)}
+	{#each content as c, i (c.id)}
 		<BlockTypeCard {...c} />
 	{/each}
 </div>
