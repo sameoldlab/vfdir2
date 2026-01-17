@@ -9,22 +9,15 @@ import { User } from '$lib/data/user.svelte'
 import type { ArenaBlock, ArenaChannel, ArenaChannelContents } from "arena-ts"
 import { channels, entries, media, persistData } from "$lib/data/maps.svelte"
 import { pool } from "./connectionPool.svelte"
+import { PersistedState } from 'runed'
 
-class LastRow {
-  #val: bigint
-  constructor() {
-    this.#val = BigInt(localStorage.getItem('lastRow')) ?? 0n
-    localStorage.setItem('lastRow', lastRow.toString())
+let lastRow = new PersistedState('lastRow', 0n, {
+  serializer: {
+    deserialize: (val) => BigInt(val),
+    serialize: (val) => val.toString(),
   }
-  get() {
-    return this.#val
-  }
-  set(val: bigint) {
-    localStorage.setItem('lastRow', val.toString())
-    this.#val = BigInt(localStorage.getItem('lastRow')) ?? 0n
-  }
-}
-let lastRow = new LastRow()
+})
+const channel = new BroadcastChannel('updates')
 
 export async function bootstrap(db: TXAsync | DB) {
   const events = await db.execO('select rowid,* from log')
@@ -34,15 +27,14 @@ export async function bootstrap(db: TXAsync | DB) {
   return
 }
 
-const channel = new BroadcastChannel('updates')
 export const watchEvents = () => channel.addEventListener('message', ev => {
   if (ev.data) {
     const ub: bigint[] = [...ev.data.values()]
     pool.exec(async (tx, db) => {
-      await db.execO('select *,rowid from log where rowid between ? and ?', [ub[0], ub.at(-1)])
+      await db.execO('select *,rowid from log where rowid between ? and ?', [ub[0], ub.at(-1)!])
         .then((events) => {
           parseEvent(events)
-          persistData().then(() => lastRow.set(ub.at(-1)))
+          persistData().then(() => lastRow.current = ub.at(-1)!)
         })
       // .catch((err) => { console.error(err) })
     })
