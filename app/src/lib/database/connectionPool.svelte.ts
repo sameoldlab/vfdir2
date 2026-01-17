@@ -90,6 +90,7 @@ export class DbPool {
 				})
 			} catch (err) {
 				console.error(`Error while running transaction: ${err}`)
+				console.trace(err)
 			}
 			return () => this.#close(db)
 		} catch (err) {
