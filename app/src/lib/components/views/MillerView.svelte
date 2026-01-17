@@ -43,7 +43,7 @@
 <main id="miller">
 	<div class="pane left">
 		{#if previous && previous.length > 1}
-			{#each previous as p (p._id)}
+			{#each previous as p (p.key)}
 				{@render entry(p)}
 			{/each}
 		{:else}
