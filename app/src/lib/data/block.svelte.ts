@@ -9,11 +9,11 @@ export class Block implements Collectable {
   id: string
   title: string = $state('')
   description: string = $state('')
-  media?: string = $state('')
-  content?: string = $state('')
+  media?: string | undefined = $state('')
+  content?: string | undefined = $state('')
   type: 'text' | 'media' | 'link' | 'attachment'
   created_at: number
-  updated_at: number = $state()
+  updated_at: number = $state(0)
   filename: string
   provider_url: string
   image: string
@@ -28,7 +28,7 @@ export class Block implements Collectable {
   }
   #connections = new Set<string>()
   get connections() {
-    return [...this.#connections.values()].map(c => channels.get(c))
+    return [...this.#connections.values()].map(c => channels.get(c)).filter(c => c !== undefined)
   }
   addConnection(slug: string) {
     this.#connections.add(slug)

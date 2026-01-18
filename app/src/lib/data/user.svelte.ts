@@ -41,10 +41,10 @@ export class User implements Collection {
     return this.#keys.delete(key)
   }
   get channels() {
-    return this.#channels.map(channels.get)
+    return this.#channels.map(e => channels.get(e)).filter(e => e !== undefined)
   }
   get entries() {
-    return this.#entries.map(entries.get)
+    return this.#entries.map(e => entries.get(e)).filter(e => e !== undefined)
   }
 
   static fromObject({ key, name, avatar }: { key: string, name: string, avatar: string }) {

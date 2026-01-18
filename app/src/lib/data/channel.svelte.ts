@@ -72,11 +72,11 @@ export class Channel implements Collection, Collectable {
   }
   #blocks: Connection[] = $state([])
   get entries() {
-    return this.#blocks.map(conn => conn.get()).sort((a, b) => a.position - b.position)
+    return this.#blocks.map(conn => conn.get()).filter(e => e !== undefined).sort((a, b) => a.position - b.position)
   }
   #connections = new Set<string>()
   get connections() {
-    return [...this.#connections.values()].map(slug => channels.get(slug))
+    return [...this.#connections.values()].map(slug => channels.get(slug)).filter(e => e !== undefined)
   }
   addConnection(slug: string) {
     this.#connections.add(slug)
