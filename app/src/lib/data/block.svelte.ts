@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { ArenaBlock } from "arena-ts"
+import type { components } from '$lib/services/arena/schema'
+type ArenaBlock = components['schemas']['Block']
 import { entries, channels, users, populateUser } from "./maps.svelte"
 import type { Collectable } from "./types"
+import { User } from "./user.svelte"
+
+type BlockI = Block & { author_slug: User['key'] }
 
 export class Block implements Collectable {
   key: string
@@ -33,11 +37,8 @@ export class Block implements Collectable {
   addConnection(slug: string) {
     this.#connections.add(slug)
   }
-  rmConnection(slug: string) {
-    return false
-  }
 
-  constructor(b: Block) {
+  constructor(b: BlockI) {
     this.type = b.type
     this.created_at = b.created_at
     this.updated_at = b.updated_at
@@ -58,8 +59,9 @@ export class Block implements Collectable {
 
     populateUser(this.key, this.#author)
   }
+
   write() {
-    return {
+    return JSON.stringify({
       id: this.id,
       type: this.type,
       title: this.title,
@@ -74,29 +76,28 @@ export class Block implements Collectable {
       author_slug: this.#author,
       attachment: this.attachment,
       connections: [...this.#connections.values()]
-    }
+    })
   }
-  static fromArena(block: ArenaBlock): Block {
-    const data = {
-      id: block.id,
-      type: block.class.toLowerCase(),
+  static fromArena(block: ArenaBlock) {
+    const data: BlockI = {
+      id: block.id.toString(),
+      type: block.type.toLowerCase(),
       title: block.title ?? '',
-      description: block.description ?? '',
+      description: block.description?.markdown ?? '',
       created_at: new Date(block.created_at).valueOf(),
       updated_at: new Date(block.updated_at).valueOf(),
-      content: block.content && block.content,
-      filename: block.attachment && block.attachment.content_type,
-      provider_url: block.source && block.source.provider.url,
+      content: block.type === 'Text' ? block.content.markdown : undefined,
+      filename: block.type === 'Attachment' ? block.attachment.url : '',
+      provider_url: block.source ? block.source.provider?.url ?? '' : '',
       image: block.image && block.image.original.url,
-      source: null,
+      source: block.source?.url || '',
       author_slug: block.user.slug,
       attachment: block.attachment?.url
     }
 
-    if (block.class === 'Text')
-      data.source = block.source ? block.source.url : block.source
-    else
-      data.source = block.source && block.source.url
+    const user = new User(block.user.slug, block.user.name, block.user.avatar)
+    user.addEntry(block.id.toString(), 'blocks')
+
     // db.exec(`insert or ignore into Providers values (?,?);`, [
     // 	data.source.provider.url,
     // 	data.source.provider.name
