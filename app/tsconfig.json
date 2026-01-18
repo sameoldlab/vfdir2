@@ -7,6 +7,7 @@
     "moduleReoslution": "bundler",
     "strictNullChecks": true,
     "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
     "resolveJsonModule": true,
     "allowJs": true,
     "checkJs": true,
