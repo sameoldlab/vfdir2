@@ -2,12 +2,12 @@
 
 <script lang="ts">
 	import Header from '$lib/components/header.svelte'
-	// import { initStore } from '$lib/database/createTables'
-	// import { pool } from '$lib/database/connectionPool.svelte'
+	import { initStore } from '$lib/database/createTables'
+	import { pool } from '$lib/database/connectionPool.svelte'
 	import { onMount } from 'svelte'
 	import { beforeNavigate } from '$app/navigation'
 	import { setTree } from '$lib/stores.svelte'
-	// import { fade } from 'svelte/transition'
+	import { bootstrap, watchEvents } from '$lib/database/watchEvents'
 	let { children } = $props()
 
 	const tree = $state([])
@@ -16,7 +16,7 @@
 	beforeNavigate((nav) => {
 		switch (nav.type) {
 			case 'link':
-				if (nav.from.route.id === '/') {
+				if (nav.from?.route.id === '/') {
 					tree.length = 0
 					tree[0] = [nav.from]
 				} else tree.push(nav.from)
@@ -29,22 +29,23 @@
 
 	let ready = $state(true)
 	onMount(() => {
-		/* pool.exec(async (tx) => {
+		console.debug('bootstrapping...')
+		pool.exec(async (tx) => {
 			await initStore(tx)
-			const { watchEvents, bootstrap } =
-				await import('$lib/database/watchEvents')
 			watchEvents()
 			await bootstrap(tx)
 			// pullArena(tx, ...arenaChannels)
 			console.log('ready')
 			ready = true
-		}) */
+		})
 	})
 </script>
 
 <Header />
 <div id="padheader"></div>
-{@render children()}
+{#if ready}
+	{@render children()}
+{/if}
 
 <style>
 	:global(div#contents) {
