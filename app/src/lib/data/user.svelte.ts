@@ -28,6 +28,19 @@ export class User implements Collection {
     }
     return new User(key, name, avatar)
   }
+  static upsert(
+    key: string,
+    name: string,
+    avatar?: string,
+  ) {
+    const existing = users.get(key)
+    if (existing) {
+      existing.name = name
+      existing.avatar = avatar
+      return existing
+    }
+    return new User(key, name, avatar)
+  }
 
   addEntry(key: string, type: 'blocks' | 'channels') {
     if (this.#keys.has(key)) return
