@@ -8,9 +8,10 @@
 	import { beforeNavigate } from '$app/navigation'
 	import { setTree } from '$lib/stores.svelte'
 	import { bootstrap, watchEvents } from '$lib/database/watchEvents'
+	import type { NavigationTarget } from '@sveltejs/kit'
 	let { children } = $props()
 
-	const tree = $state([])
+	const tree: NavigationTarget[] = $state([])
 	setTree(tree)
 
 	beforeNavigate((nav) => {
@@ -34,7 +35,6 @@
 			await initStore(tx)
 			watchEvents()
 			await bootstrap(tx)
-			// pullArena(tx, ...arenaChannels)
 			console.log('ready')
 			ready = true
 		})

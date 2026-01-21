@@ -10,6 +10,7 @@ import type { ArenaBlock, ArenaChannel, ArenaChannelContents } from "arena-ts"
 import { channels, entries, media, persistData } from "$lib/data/maps.svelte"
 import { pool } from "./connectionPool.svelte"
 import { PersistedState } from 'runed'
+import { browser } from "$app/environment"
 
 let lastRow = new PersistedState('lastRow', 0n, {
   serializer: {
@@ -17,9 +18,17 @@ let lastRow = new PersistedState('lastRow', 0n, {
     serialize: (val) => val.toString(),
   }
 })
-const channel = new BroadcastChannel('updates')
 
+let channel: BroadcastChannel
+const getChannel = () => {
+  if (channel) return channel
+  channel = new BroadcastChannel('updates')
+  return channel
+}
+
+/** Load past events into data maps */
 export async function bootstrap(db: TXAsync | DB) {
+  if (!browser) return
   const events = await db.execO('select rowid,* from log')
   console.debug(`loading ${events.length} events into memory`)
   parseEvent(events)
@@ -27,19 +36,24 @@ export async function bootstrap(db: TXAsync | DB) {
   return
 }
 
-export const watchEvents = () => channel.addEventListener('message', ev => {
-  if (ev.data) {
-    const ub: bigint[] = [...ev.data.values()]
-    pool.exec(async (tx, db) => {
-      await db.execO('select *,rowid from log where rowid between ? and ?', [ub[0], ub.at(-1)!])
-        .then((events) => {
-          parseEvent(events)
-          persistData().then(() => lastRow.current = ub.at(-1)!)
-        })
-      // .catch((err) => { console.error(err) })
-    })
-  }
-})
+/** initialize broadcast channel watcher. auto-pulls new events into maps */
+export const watchEvents = () => {
+  if (!browser) return
+  getChannel().addEventListener('message', ev => {
+    if (ev.data) {
+      const ub: bigint[] = [...ev.data.values()]
+      pool.exec(async (tx, db) => {
+        await db.execO('select *,rowid from log where rowid between ? and ?', [ub[0]!, ub.at(-1)!])
+          .then((events) => {
+            parseEvent(events)
+            console.error('FINISH THE PERSIST FUNCTION!!')
+            // persistData().then(() => lastRow.current = ub.at(-1)!)
+          })
+        // .catch((err) => { console.error(err) })
+      })
+    }
+  })
+}
 
 const pullUsers = (data: ArenaChannel | ArenaChannelContents) => {
   if ('user' in data) {
@@ -112,6 +126,7 @@ function parseEvent(events: object[]) {
   }
 }
 
+/*
 async function insertO<O extends object>(tx: TXAsync, row: O, table: string, stmts: Map<string, StmtAsync>): Promise<[string, StmtAsync]> {
   const keys = Object.keys(row)
   const sql = `INSERT INTO ${table}(${keys.join(',')}) VALUES (${Array(keys.length).fill('?').join(',')});`
@@ -124,3 +139,4 @@ async function insertO<O extends object>(tx: TXAsync, row: O, table: string, stm
     console.error({ error, sql, row })
   }
 }
+*/
