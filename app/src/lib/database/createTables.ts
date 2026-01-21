@@ -3,6 +3,7 @@
 import type { DB } from "@vlcn.io/crsqlite-wasm"
 import type { TXAsync } from "@vlcn.io/xplat-api"
 
+/** create sqlite tables for Users and event log */
 export async function initStore(db: DB | TXAsync) {
 	if (
 		localStorage.getItem('deviceId') === null
