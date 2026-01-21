@@ -1,16 +1,17 @@
-import { type } from 'arktype'
-import { is, type ActorIdentifier } from "@atcute/lexicons";
+// SPDX-License-Identifier: MPL-2.0
+
+import { is, type ActorIdentifier, type ResourceUri } from "@atcute/lexicons";
 import { Client, simpleFetchHandler } from "@atcute/client";
 import { NetworkCosmikCard, NetworkCosmikCollection, NetworkCosmikCollectionLink } from "$lib/services/atlex";
 import { ComAtprotoRepoListRecords } from "@atcute/atproto";
-import { ConvexHttpClient } from "convex/browser";
-import { env } from "$env/dynamic/public";
-import { api } from "$lib/convex/_generated/api";
-import { command } from "$app/server";
 import type { Id } from "$lib/convex/_generated/dataModel";
 import type { ResolvedActor } from '@atcute/identity-resolver';
-type RecordParams = { repo: ActorIdentifier, limit?: number, reverse?: boolean, cursor?: string }
+import { User } from '$lib/data/user.svelte'
+import { Block } from '$lib/data/block.svelte'
+import { Channel, Connection } from '$lib/data/channel.svelte';
+import { channels } from '$lib/data/maps.svelte';
 
+type RecordParams = { repo: ActorIdentifier, limit?: number, reverse?: boolean, cursor?: string }
 async function listRecords(xrpc: Client, params: { repo: ActorIdentifier, collection: `${string}.${string}.${string}`, limit?: number, reverse?: boolean, cursor?: string }) {
   const records = await xrpc.call(ComAtprotoRepoListRecords, {
     params,
@@ -93,12 +94,23 @@ const STATUS = Object.freeze({
   'CLOSED': 'closed',
   'OPEN': 'public'
 })
-const atpKey = (uri: string) => uri.split('/').at(-1)!
+const CosmikTypes: Readonly<
+  Record<'NOTE' | 'LINK' | 'BLOB', Block['type']>
+> = Object.freeze({
+  NOTE: 'text',
+  BLOB: 'media',
+  LINK: 'link',
+})
+const atpKey = (uri: ResourceUri) => {
+  let [did, collection, hash] = uri.slice(5).split('/')
+  if (!did || !collection || !hash) {
+    throw new Error(`invalid resourceHash ${uri}`)
+  }
+  return `${did}/${collection}/${hash}`
+}
 
 
 const crawlCosmic = async (xrpc: Client, params: RecordParams) => {
-  const convex = new ConvexHttpClient(env.PUBLIC_CONVEX_URL)
-  console.log('start crawl')
 
   const promises: Promise<({
     user: [string, Id<'users'>]
@@ -106,7 +118,8 @@ const crawlCosmic = async (xrpc: Client, params: RecordParams) => {
   } | null)[]>[] = []
 
   for await (const batch of listCards(xrpc, params)) {
-    const entries = batch.map(({ cid, uri, value: v }) => {
+    batch.map(({ cid, uri, value: v }) => {
+      if (v.type == 'NOTE') return
       const rest: {
         type: 'text' | 'media' | 'blob' | 'link' | 'channel'
       } & Record<string, any> = { type: 'link' }
@@ -118,91 +131,71 @@ const crawlCosmic = async (xrpc: Client, params: RecordParams) => {
           rest.title = v.content.metadata?.title ?? ''
           rest.url = v.content.url
           rest.source = JSON.stringify(v.provenance)
+          if (v.content.$type === 'network.cosmik.card#urlContent') {
+            v.content.metadata?.type
+          }
           break
         case 'BLOB':
           rest.type = 'blob'
-          rest.blob = v.content?.ref?.$link
+          // rest.blob = v.content?.ref?.$link
+          // TODO: resolve blob content.type to mime and split media (img, video, music, pdf ) from attachments
           break
       }
-      return {
-        user: {
-          displayName: params.repo,
-          id: params.repo
-        },
+
+      new Block({
+        id: atpKey(uri),
+        author_slug: params.repo,
         title: '',
         description: '',
         ...rest,
-        backing_service: 'cosmik',
-        service_id: atpKey(uri),
+        type: CosmikTypes[v.type],
+        // attachment: v.type === 'BLOB' ? v.content.ref.$link : undefined,
+        // backing_service: 'cosmik',
         created_at: v.createdAt ? new Date(v.createdAt).valueOf() : Date.now(),
         updated_at: v.createdAt ? new Date(v.createdAt).valueOf() : Date.now(),
-      }
+      })
     })
-    promises.push(convex.mutation(api.add.addEntries, { service: "atproto", entries }))
   }
 
   console.log('pulling collections')
   for await (const batch of listCollections(xrpc, params)) {
-    const entries = batch.map(({ uri, value: v }) => ({
-      user: {
-        displayName: params.repo,
-        id: params.repo
-      },
+    const entries = batch.map(({ uri, value: v }) => new Channel({
+      id: atpKey(uri),
+      slug: atpKey(uri),
       title: v.name ?? '',
+      status: STATUS[v.accessType] ?? 'closed',
       description: v.description ?? '',
-      type: 'channel' as const,
-      backing_service: 'cosmik',
-      service_id: atpKey(uri),
+      // backing_service: 'cosmik',
       created_at: v.createdAt ? new Date(v.createdAt).valueOf() : Date.now(),
       updated_at: v.updatedAt ? new Date(v.updatedAt).valueOf() : Date.now(),
-      status: STATUS[v.accessType] ?? 'closed',
+      author: params.repo,
     }))
-    promises.push(convex.mutation(api.add.addEntries, { service: "atproto", entries }))
   }
 
   console.log('linking maps')
-  const res = (await Promise.all(promises)).flat()
-  const entries: Map<string, Id<'entries'>> = new Map()
-  const users: Map<string | number, Id<'users'>> = new Map()
-  res.filter(q => q !== null).forEach(({ entry: [ek, ev], user: [uk, uv] }) => {
-    users.set(uk, uv)
-    entries.set(ek as string, ev)
-  })
-
-  const promises2: Promise<null>[] = []
   for await (const batch of listConnections(xrpc, params)) {
     console.log(`connecting batch ${promises.length}`)
-    const connections = (await Promise.all(batch.map(async ({ value: v }) => {
-      const ckey = atpKey(v.card.uri)
-      const pkey = atpKey(v.collection.uri)
-      const cid = entries.get(ckey)
-      const pid = entries.get(pkey)
-      if (!cid) console.warn('missing id for', { cid, ckey })
-      if (!pid) console.warn('missing id for', { pid, pkey })
-      return {
-        cid: cid ?? ckey,
-        pid: pid ?? pkey,
+    batch.forEach(({ value: v }) => {
+      const parent_id = atpKey(v.collection.uri)
+      channels.get(parent_id)?.addEntry(new Connection({
+        parent_id,
+        child_id: atpKey(v.card.uri),
         connected_at: new Date(v.addedAt).valueOf(),
-        connected_by: users.get(params.repo) ?? { id: params.repo, displayName: params.repo },
-      }
-    })))
-    promises2.push(convex.mutation(api.add.connectEntries, { service: 'atproto', connections }))
+        connected_by: v.addedBy,
+        pinned: false,
+        position: Infinity,
+      }))
+    })
   }
-  await Promise.all(promises2)
 
   console.log('COMPLETE')
 }
 
-export const spiderUser = command(type({
-  did: "string",
-  pds: "string",
-}), async ({ did, pds }: Exclude<ResolvedActor, 'handle'>) => {
+export const pullCosmik = async ({ did, pds, handle }: ResolvedActor) => {
   const xrpc = new Client({
     handler: simpleFetchHandler({ service: pds })
   })
-  try {
-    await crawlCosmic(xrpc, { repo: did, limit: 100, reverse: false })
-  } catch (err) {
-    console.error(err)
-  }
-})
+  User.upsert(did, handle, '')
+  crawlCosmic(xrpc, { repo: did, limit: 100, reverse: false })
+    .catch(console.error)
+}
