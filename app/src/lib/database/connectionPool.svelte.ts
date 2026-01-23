@@ -28,8 +28,7 @@ export type QueryData<T> = {
 }
 
 export class DbPool {
-	#maxConnections: number = 1
-	#connections = new Set<DB>()
+	#connection: DB | null
 	#sqlite: SQLite3
 	dbName: string
 	status = $state<'available' | 'loading' | 'error'>('loading')
@@ -50,13 +49,9 @@ export class DbPool {
 	async #connect() {
 		this.#sqlite = this.#sqlite || await this.#initSql()
 
-		if (this.#connections.size < this.#maxConnections) {
-			let connection: DB | undefined
-			try {
-				connection = await this.#sqlite.open(this.dbName)
-			} catch (err) {
-				console.error(err)
-			}
+		if (this.#connection) return this.#connection
+		try {
+			const connection = await this.#sqlite.open(this.dbName)
 			connection.onUpdate((type, db, table, row) => {
 				if (!this.#updateBuffer.has(`${table}:${type}`)) {
 					this.#updateBuffer.set(`${table}:${type}`, new Set())
@@ -69,11 +64,13 @@ export class DbPool {
 
 				// this.#subscribe(type, db, table, row)
 			})
-
-			this.#connections.add(connection)
-			return connection
+			this.#connection = connection
+			return this.#connection
+		} catch (err) {
+			console.error(err)
+			return { error: err }
 		}
-		return [...this.#connections.values()][0]
+
 	}
 	#batchSubscribe() {
 		this.#timeout = null
@@ -84,6 +81,10 @@ export class DbPool {
 	async exec<R>(fn: (tx: TXAsync, db: DB) => R) {
 		try {
 			const db = await this.#connect()
+			if ('error' in db) {
+				console.error(db)
+				return db.error
+			}
 			try {
 				await db.tx(async (tx) => {
 					await fn(tx, db)
@@ -92,25 +93,23 @@ export class DbPool {
 				console.error(`Error while running transaction: ${err}`)
 				console.trace(err)
 			}
-			return () => this.#close(db)
+			return () => this.#close()
 		} catch (err) {
 			console.error(err)
 		}
 	}
-	async #close(connection: DB) {
+	async #close() {
+		if (!this.#connection) return
 		try {
-			const res = connection && await connection.close()
-			this.#connections.delete(connection)
+			const res = await this.#connection.close()
+			this.#connection = null
 			return res
 		} catch (err) {
 			if (!(err.message === 'Error: not a database')) console.warn(err)
 		}
 	}
 	async closeAll() {
-		for (const connection of this.#connections) {
-			await connection.close()
-		}
-		this.#connections.clear()
+		this.#close()
 	}
 	async #initSql() {
 		try {
