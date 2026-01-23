@@ -2,7 +2,7 @@
 
 import type { Collection, Channel, Entry } from "./types"
 import { users, channels, entries } from "./maps.svelte"
-import type { ArenaUser } from "arena-ts"
+import type { ArenaUser } from "$lib/services/arena/types"
 
 export class User implements Collection {
   /** url safe representatnion of user's name */
@@ -66,7 +66,7 @@ export class User implements Collection {
   static fromArena(user: ArenaUser) {
     return {
       key: user.slug,
-      name: user.username,
+      name: user.name,
       avatar: user.avatar,
     }
   }

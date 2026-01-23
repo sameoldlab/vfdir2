@@ -3,30 +3,13 @@
 import type { Channel, Connection } from "./channel.svelte";
 import type { User } from './user.svelte'
 import type { Block } from './block.svelte'
-import type { ArenaBlock, ArenaChannel, ArenaChannelContents, ArenaUser, ConnectionData } from "arena-ts";
 
 export type Media = {
   key: string,
   value: string
 }
 export type Entry = ({ type: 'channel' } & Channel) | Block
-export type Child = Connection & Entry
-export type Parent = Collection
 
-export type ArenaConnectionEventData = {
-  parent: ArenaChannel,
-  position: ConnectionData['position'],
-  selected: ConnectionData['selected'],
-  connected_at: ConnectionData['connected_at'],
-  connected_by: ConnectionData['connected_by_user_slug']
-} & ({
-  is_channel: true
-  child: ArenaChannel & ConnectionData,
-} | {
-  is_channel: false
-  child: ArenaBlock & ConnectionData,
-}
-  )
 export interface Base {
   key: string
   /** serialize data for storage */
@@ -35,6 +18,7 @@ export interface Base {
   // read: (value: string) => Base
 }
 
+/** object with the ability to contain entries */
 export interface Collection extends Base {
   addEntry: (key: Connection | Entry['key'], type?: 'channels' | 'blocks') => void,
   removeEntry: (key: Entry['key']) => boolean,
@@ -43,7 +27,7 @@ export interface Collection extends Base {
 }
 
 export interface Collectable extends Base {
-  addConnection: (key: Parent['key']) => void,
+  addConnection: (key: Collection['key']) => void,
   connections: Channel[]
 }
 
