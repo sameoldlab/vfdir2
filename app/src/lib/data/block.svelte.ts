@@ -1,12 +1,36 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { components } from '$lib/services/arena/schema'
-type ArenaBlock = components['schemas']['Block']
+import type { ArenaBlock } from "$lib/services/arena/types"
 import { entries, channels, users, populateUser } from "./maps.svelte"
 import type { Collectable } from "./types"
 import { User } from "./user.svelte"
 
-type BlockI = Block & { author_slug: User['key'] }
+type BlockI = {
+  id: string,
+  author_slug: User['key'],
+  title: string,
+  description: string,
+  media?: string,
+  content?: string,
+  type: Block['type'],
+  created_at: number,
+  updated_at: number,
+  filename?: string,
+  provider_url?: string,
+  image?: string,
+  source?: string,
+  attachment?: string,
+}
+
+const ArenaTypes: Readonly<
+  Record<components['schemas']['Block']['type'], Block['type']>
+> = Object.freeze({
+  Text: 'text',
+  Image: 'media',
+  Link: 'link',
+  Embed: 'link',
+  Attachment: 'attachment',
+})
 
 export class Block implements Collectable {
   key: string
@@ -15,10 +39,13 @@ export class Block implements Collectable {
   description: string = $state('')
   media?: string | undefined = $state('')
   content?: string | undefined = $state('')
+  // Media and attachment may make sense to merge. One is Media represents file formats directly
+  // viewable in a browser, while attachements usually need an external renderer.
+  // building additional viwers should not require changing the data type 
   type: 'text' | 'media' | 'link' | 'attachment'
   created_at: number
   updated_at: number = $state(0)
-  filename: string
+  filename?: string | undefined
   provider_url: string
   image: string
   source: string
@@ -57,7 +84,8 @@ export class Block implements Collectable {
     this.#author = b.author_slug
     entries.set(this.key, this)
 
-    populateUser(this.key, this.#author)
+    const user = users.get(this.#author)
+    if (user) user.addEntry(this.key, 'blocks')
   }
 
   write() {
@@ -81,22 +109,21 @@ export class Block implements Collectable {
   static fromArena(block: ArenaBlock) {
     const data: BlockI = {
       id: block.id.toString(),
-      type: block.type.toLowerCase(),
+      type: ArenaTypes[block.type],
       title: block.title ?? '',
       description: block.description?.markdown ?? '',
       created_at: new Date(block.created_at).valueOf(),
       updated_at: new Date(block.updated_at).valueOf(),
-      content: block.type === 'Text' ? block.content.markdown : undefined,
-      filename: block.type === 'Attachment' ? block.attachment.url : '',
-      provider_url: block.source ? block.source.provider?.url ?? '' : '',
-      image: block.image && block.image.original.url,
+      content: block.type === 'Text' ? block.content.markdown : '',
+      filename: block.type === 'Attachment' ? block.attachment?.url : '',
+      provider_url: block.source?.provider ? block.source.provider.url : '',
+      image: block.type !== 'Text' && block.image ? block.image.large.src : undefined,
       source: block.source?.url || '',
       author_slug: block.user.slug,
-      attachment: block.attachment?.url
+      attachment: block.type === 'Attachment' ? block.attachment.url : undefined
     }
 
-    const user = new User(block.user.slug, block.user.name, block.user.avatar)
-    user.addEntry(block.id.toString(), 'blocks')
+    new User(block.user.slug, block.user.name, block.user.avatar ?? '')
 
     // db.exec(`insert or ignore into Providers values (?,?);`, [
     // 	data.source.provider.url,

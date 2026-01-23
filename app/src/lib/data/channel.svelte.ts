@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { ArenaChannel, ArenaChannelContents, ArenaChannelWithDetails, ArenaUser } from "arena-ts"
+import type { ArenaChannel, ArenaConnection, ArenaEntry } from "$lib/services/arena/types"
 import { entries, channels, users, populateUser } from "./maps.svelte"
-import type { Child, Collectable, Entry, Collection, User, ArenaConnectionEventData } from "./types"
+import type { Collectable, Entry, Collection, User } from "./types"
+
 type ConnectionI = {
   key: string
   parent_id: string
@@ -12,6 +13,7 @@ type ConnectionI = {
   connected_at: number
   connected_by: string
 }
+
 export class Connection {
   key: string
   parent_id: string
@@ -20,7 +22,6 @@ export class Connection {
   pinned: boolean
   connected_at: number
   #connected_by: User['key']
-
 
   constructor(obj: ConnectionI) {
     this.parent_id = `${obj.parent_id}`
@@ -40,19 +41,30 @@ export class Connection {
       console.error(`Child not found for ${this.key} `);
       return
     }
-    return Object.assign(child, this) as Child
+    return Object.assign(child, this) as Entry & Connection
   }
-  static fromArena(data: ArenaConnectionEventData): ConnectionI {
+  static fromArena(conn: ArenaConnection, child: ArenaEntry): ConnectionI {
     return {
-      key: `${data.parent.id}:${data.child.id}`,
-      parent_id: data.parent.slug,
-      child_id: data.is_channel === true ? data.child.slug : data.child.id.toString(),
-      position: data.position,
-      pinned: data.selected ? true : false,
-      connected_at: new Date(data.connected_at).valueOf(),
-      connected_by: data.child.connected_by_user_slug
+      key: `${conn.id}:${child.id}`,
+      parent_id: conn.id.toString(),
+      child_id: child.type === 'Channel' ? child.slug : child.id.toString(),
+      position: conn.position,
+      pinned: conn.pinned ? true : false,
+      connected_at: new Date(conn.connected_at).valueOf(),
+      connected_by: conn.connected_by?.slug ?? ''
     }
   }
+}
+type ChannelI = {
+  slug: string,
+  id: string,
+  title: string,
+  description: string,
+  created_at: number,
+  updated_at: number,
+  status: string,
+  image?: string,
+  author: string,
 }
 export class Channel implements Collection, Collectable {
   key: string
@@ -63,18 +75,19 @@ export class Channel implements Collection, Collectable {
   description: string
   created_at: number
   updated_at: number
-  status: string
+  status: 'private' | 'public' | 'closed'
   image: string
   #author: string
   #keys = new Set<string>()
+  #blocks: Connection[] = $state([])
+  #connections = new Set<string>()
+
   get author() {
     return users.get(this.#author)
   }
-  #blocks: Connection[] = $state([])
   get entries() {
     return this.#blocks.map(conn => conn.get()).filter(e => e !== undefined).sort((a, b) => a.position - b.position)
   }
-  #connections = new Set<string>()
   get connections() {
     return [...this.#connections.values()].map(slug => channels.get(slug)).filter(e => e !== undefined)
   }
@@ -84,7 +97,8 @@ export class Channel implements Collection, Collectable {
   rmConnection(slug: string) {
     return false
   }
-  constructor(obj: Channel) {
+  constructor(obj: ChannelI) {
+    // const existing = channels.get(`${obj.id}`)
     this.id = `${obj.id}`
     this.title = obj.title
     this.slug = obj.slug
@@ -93,7 +107,7 @@ export class Channel implements Collection, Collectable {
     this.description = obj.description
     this.created_at = obj.created_at
     this.updated_at = obj.updated_at
-    this.image = obj.image
+    this.image = obj.image ?? ''
     this.#author = obj.author
     channels.set(this.key, this)
     entries.set(this.key, this)
@@ -111,22 +125,21 @@ export class Channel implements Collection, Collectable {
   get length() {
     return this.#blocks.length
   }
-  static fromArena(c: ArenaChannel | ArenaChannelWithDetails): Channel {
-    const flags = [c.kind] as ChannelParsed['flags']
-    if (c.collaboration) flags.push('collaboration')
-    if (c.published) flags.push('published')
+  static fromArena(c: ArenaChannel): ChannelI {
+    // const flags = [c.kind] as ChannelParsed['flags']
+    // if (c.collaboration) flags.push('collaboration')
+    // if (c.published) flags.push('published')
 
     return {
       id: c.slug,
-      type: 'channel',
       title: c.title,
       slug: c.slug,
+      description: c.description?.markdown ?? '',
       created_at: new Date(c.created_at).valueOf(),
       updated_at: new Date(c.updated_at).valueOf(),
-      flags,
-      status: c.status,
-      source: 'arena',
-      author: c.user?.slug ?? c.user_id,
+      status: c.visibility,
+      // source: 'arena',
+      author: c.owner.slug,
     }
   }
 }
