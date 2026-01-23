@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { ULID } from "ulidx"
-import type { ArenaBlock, ArenaChannel, ArenaChannelContents, ArenaChannelWithDetails, ArenaUser } from "arena-ts"
+import type { ArenaChannel, ArenaEntry, ArenaConnection, ArenaUser } from "$lib/services/arena/types"
 import type { DB } from "@vlcn.io/crsqlite-wasm"
 import { Hlc, type HLC } from "./hlc"
 import type { StmtAsync, TXAsync } from "@vlcn.io/xplat-api"
@@ -63,11 +63,11 @@ export type EventSchema<O extends object> = {
   objectId: string
 }
 
-export const diffEntry = <D extends ArenaChannelContents>(db: DB | TXAsync,
+export const diffEntry = <D extends ArenaEntry>(db: DB | TXAsync,
   { data, current, objectId, originId }:
     {
       data: D,
-      current?: Entry,
+      current: Entry,
       originId: () => HLC,
       objectId: HLC
     }
@@ -79,38 +79,41 @@ export const diffEntry = <D extends ArenaChannelContents>(db: DB | TXAsync,
         title: data.title
       }
     }))
-  if (data.class === 'Channel' && current.type === 'channel') {
-    if (data.status && current.status !== data.status)
+  if (data.type === 'Channel' && current.type === 'channel') {
+    if (data.visibility && current.status !== data.visibility)
       promises.push(record(db, {
         objectId, type: 'mod:status', originId: originId(), data: {
-          status: data.status
+          status: data.visibility
         }
       }))
-    if (data.metadata?.description && current.description !== data.metadata.description)
+    if (data.description?.markdown && current.description !== data.description.markdown)
       promises.push(record(db, {
         objectId, type: 'mod:description', originId: originId(), data: {
-          description: data.metadata.description
+          description: data.description.markdown
         }
       }))
-  } else if (data.class !== 'Channel' && current.type === 'block') {
-    if (data.content && current.content !== data.content)
+  } else if (data.type !== 'Channel' && current.type !== 'channel') {
+
+    if ('content' in data && current.content !== data.content?.markdown)
       promises.push(record(db, {
         objectId, type: 'mod:content', originId: originId(), data: {
-          content: data.content
+          content: data.content?.markdown
         }
       }))
-    if (data.description && current.description !== data.description)
+    if (data.description?.markdown && current.description !== data.description.markdown)
       promises.push(record(db, {
         objectId, type: 'mod:description', originId: originId(), data: {
-          description: data.description
+          description: data.description.markdown
         }
       }))
   }
   return Promise.all(promises)
 }
-export const arena_entry_sync = async <D extends ArenaChannelContents>(db: DB | TXAsync, data: D, current?: Entry) => {
-  const classType = data.base_class.toLowerCase()
-  const objectId = `${classType}:${data.id}`
+
+/** @warning check if object has already been recorded to avoid bloating event log */
+export const arena_entry_sync = async <D extends ArenaEntry>(db: DB | TXAsync, data: D, current?: Entry) => {
+  const classType = data.type == 'Channel' ? 'channel' : 'block'
+  const objectId = `${classType}:${data.id}` as const
   const updated_at = new Date(data.updated_at).valueOf()
   let c = -1
   const originId = (): HLC => hlc().receive(`${updated_at}:${c++}:arena`)
@@ -129,34 +132,33 @@ export const arena_entry_sync = async <D extends ArenaChannelContents>(db: DB | 
 }
 
 
-/** 
-  * CHECK IF CONNECTION EXISTS BEFORE CALLING THIS 
-  */
+/** @warning check if object has already been recorded to avoid bloating event log */
 export const arena_user_import = async (db: DB | TXAsync, user: Partial<ArenaUser>) => {
   const objectId = `user:${user.id}`
   const originId: HLC = hlc().receive(`${Date.now()}:0:arena`)
   return record(db, { objectId, type: `add:user`, originId, data: user })
 }
 
-/** CHECK IF CONNECTION EXISTS BEFORE CALLING THIS */
+/** @warning check if object has already been recorded to avoid bloating event log */
 export const arena_connection_import = (
   db: DB | TXAsync,
-  parent: ArenaChannelWithDetails,
-  child: ArenaChannelContents,
+  parent: ArenaChannel,
+  { connection: conn, ...child }: ArenaEntry,
 ) => {
+  if (!conn) throw Error('invalid input: child does contain connection')
+
   const objectId = `connection:${JSON.stringify([parent.id, child.id])}`
-  const connected_at = new Date(child.connected_at).valueOf()
+  const connected_at = new Date(conn.connected_at).valueOf()
   const originId: HLC = hlc().receive(`${connected_at}:0:arena`)
 
-  let { contents, ...parentData } = parent
   return record(db, {
     objectId, type: `connect`, originId, data: {
-      parent: parentData,
+      parent,
       child,
-      position: child.position,
+      position: conn.position,
       connected_at,
-      is_channel: child.class === 'Channel',
-      selected: child.selected,
+      is_channel: child.type === 'Channel',
+      selected: conn.pinned,
     }
   })
 }

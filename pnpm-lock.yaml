@@ -91,9 +91,6 @@ importers:
       '@vlcn.io/xplat-api':
         specifier: ^0.15.0
         version: 0.15.0
-      arena-ts:
-        specifier: ^1.0.2
-        version: 1.0.2
       arktype:
         specifier: ^2.1.29
         version: 2.1.29
@@ -1696,9 +1693,6 @@ packages:
   ansi-styles@5.2.0:
     resolution: {integrity: sha512-Cxwpt2SfTzTtXcfOlzGEee8O+c+MmUgGrNiBcXnuWxuFJHe6a5Hz7qwhwe5OgaSYI0IJvkLqWX1ASG+cJOkEiA==}
     engines: {node: '>=10'}
-
-  arena-ts@1.0.2:
-    resolution: {integrity: sha512-lEgHiqf38y7gxldyzakkzgiFfnAZTOequ1pLjq2l/8rQc5lzFhKdb9q0169sK3sHEj4fYxA7WZvvv0JxWlSAZQ==}
 
   argparse@1.0.10:
     resolution: {integrity: sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg==}
@@ -4267,8 +4261,6 @@ snapshots:
       color-convert: 2.0.1
 
   ansi-styles@5.2.0: {}
-
-  arena-ts@1.0.2: {}
 
   argparse@1.0.10:
     dependencies:

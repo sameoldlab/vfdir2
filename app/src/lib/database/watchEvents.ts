@@ -6,7 +6,7 @@ import type { DB, StmtAsync, TXAsync } from "@vlcn.io/xplat-api"
 import { Block } from '$lib/data/block.svelte'
 import { Channel, Connection } from '$lib/data/channel.svelte'
 import { User } from '$lib/data/user.svelte'
-import type { ArenaBlock, ArenaChannel, ArenaChannelContents } from "arena-ts"
+import type { ArenaBlock, ArenaChannel, ArenaEntry } from "$lib/services/arena/types"
 import { channels, entries, media, persistData } from "$lib/data/maps.svelte"
 import { pool } from "./connectionPool.svelte"
 import { PersistedState } from 'runed'
@@ -55,21 +55,22 @@ export const watchEvents = () => {
   })
 }
 
-const pullUsers = (data: ArenaChannel | ArenaChannelContents) => {
-  if ('user' in data) {
-    User.create(
-      data.user.slug,
-      data.user.first_name + ' ' + data.user.last_name,
-      data.user.avatar_image.display,
+const pullUsers = (data: ArenaEntry) => {
+  if (data.type === 'Channel') {
+    User.upsert(
+      data.owner.slug,
+      data.owner.name,
+      data.owner.avatar || undefined,
     )
-  }
-  if ('connected_by_username' in data) {
-    User.create(
-      data.connected_by_user_slug,
-      data.connected_by_username,
+  } else if (data.base_type === 'Block') {
+    User.upsert(
+      data.user.slug,
+      data.user.name,
+      data.user.avatar || undefined
     )
   }
 }
+
 function parseEvent(events: object[]) {
   for (const e of events) {
     let {
@@ -81,7 +82,7 @@ function parseEvent(events: object[]) {
     const from_arena = device === 'arena'
     // add external users to object graph
     if (from_arena) {
-      pullUsers(data)
+      pullUsers(data as ArenaEntry)
     }
 
     if (action === 'add') {
