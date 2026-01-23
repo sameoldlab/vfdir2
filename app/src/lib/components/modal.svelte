@@ -3,31 +3,34 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte'
 
-	let { id, children }: { id: string; children: Snippet } = $props()
+	let { id, children, beforetoggle }: { id: string; children: Snippet, beforetoggle: (e: ToggleEvent) => void } = $props()
 </script>
 
-<div {id} popover="auto">
-	<button popovertarget={id} popovertargetaction="hide">X</button>
+<div {id} popover="auto" onbeforetoggle={beforetoggle}>
+	<!-- <button popovertarget={id} popovertargetaction="hide">✖</button> -->
 	{@render children()}
 </div>
 
 <style>
 	div {
-		width: 35ch;
-		border-radius: 0.25rem;
-		border: 1px solid var(--line);
+		width: auto;
+		border-radius: 0;
+		overflow-y: hidden;
+		border: 0px solid var(--line);
 		top: 50%;
 		left: 50%;
 		translate: -50% -50%;
 		background: var(--b2);
 		padding: 1rem;
 		&::backdrop {
-			backdrop-filter: blur(4px);
+			backdrop-filter: blur(1px);
 		}
 	}
 	button {
 		background: none;
+		
 		position: fixed;
+		padding: .5rem;
 		top: 1rem;
 		right: 1rem;
 	}
