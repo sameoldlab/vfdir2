@@ -6,10 +6,18 @@ import type { DB } from "@vlcn.io/crsqlite-wasm"
 import { Hlc, type HLC } from "./hlc"
 import type { StmtAsync, TXAsync } from "@vlcn.io/xplat-api"
 import type { Entry } from "$lib/data/types"
+import { browser } from "$app/environment"
 
 const VERSION = 1
-let stmt: StmtAsync = null
-const hlc = new Hlc(localStorage.getItem('deviceId'))
+let stmt: StmtAsync | null = null
+let _hlc: Hlc | null = null
+const hlc = () => {
+  if (!browser) throw new Error('client side only script')
+  if (_hlc) return _hlc
+  _hlc = new Hlc(localStorage.getItem('deviceId')!)
+  return _hlc
+}
+/** record to event log */
 export const record = async <D extends object>(db: TXAsync | DB,
   { originId, data, objectId, type }:
     Pick<EventSchema<D>, 'objectId' | 'data' | 'type'> & { originId?: HLC }
@@ -18,7 +26,7 @@ export const record = async <D extends object>(db: TXAsync | DB,
       insert into log (version, localId, originId, data, type, objectId) values(?,?,?,?,?,?)
     `) : stmt
 
-  const localId = hlc.inc()
+  const localId = hlc().inc()
   originId = originId ?? localId
   // if (type === 'add:user')
   // console.log({ originId, type, objectId, data })
@@ -29,7 +37,7 @@ export const record = async <D extends object>(db: TXAsync | DB,
     console.error(`Error recording log: ${err}`)
   }
 }
-export const ev_stmt_close = async (tx?: TXAsync) => {
+export const ev_stmt_close = async (tx: TXAsync | null = null) => {
   stmt && await stmt.finalize(tx)
   stmt = null
   console.log('finalized stmt', stmt)
@@ -105,7 +113,7 @@ export const arena_entry_sync = async <D extends ArenaChannelContents>(db: DB | 
   const objectId = `${classType}:${data.id}`
   const updated_at = new Date(data.updated_at).valueOf()
   let c = -1
-  const originId = (): HLC => hlc.receive(`${updated_at}:${c++}:arena`)
+  const originId = (): HLC => hlc().receive(`${updated_at}:${c++}:arena`)
 
   if (!current) {
     return record(db, {
@@ -126,7 +134,7 @@ export const arena_entry_sync = async <D extends ArenaChannelContents>(db: DB | 
   */
 export const arena_user_import = async (db: DB | TXAsync, user: Partial<ArenaUser>) => {
   const objectId = `user:${user.id}`
-  const originId: HLC = hlc.receive(`${Date.now()}:0:arena`)
+  const originId: HLC = hlc().receive(`${Date.now()}:0:arena`)
   return record(db, { objectId, type: `add:user`, originId, data: user })
 }
 
@@ -138,7 +146,7 @@ export const arena_connection_import = (
 ) => {
   const objectId = `connection:${JSON.stringify([parent.id, child.id])}`
   const connected_at = new Date(child.connected_at).valueOf()
-  const originId: HLC = hlc.receive(`${connected_at}:0:arena`)
+  const originId: HLC = hlc().receive(`${connected_at}:0:arena`)
 
   let { contents, ...parentData } = parent
   return record(db, {
