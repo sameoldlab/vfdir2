@@ -9,12 +9,8 @@ export const channels = $state(new SvelteMap<string, Channel>())
 export const users = $state(new SvelteMap<string, User>())
 export const media = $state(new SvelteMap<string, Media>())
 
-const all = { entries, channels, users, media }
-export function populateUser(key: string, userId: string, type: 'channels' | 'blocks' = 'blocks') {
-  const user = users.get(userId)
-  if (user) user.addEntry(key, type)
-}
 export const persistData = async () => {
+  const all = { entries, channels, users, media }
   const db = await openDB('objectStore', undefined, {
     upgrade(db, oldV, newV, transaction, event) {
       for (const store of ['blocks', 'channels', 'media', 'users']) {
