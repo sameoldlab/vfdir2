@@ -1,29 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { ArenaBlock } from "$lib/services/arena/types"
-import { entries, channels, users, populateUser } from "./maps.svelte"
+import { entries, channels, users } from "./maps.svelte"
 import type { Collectable } from "./types"
 import { User } from "./user.svelte"
 
-type BlockI = {
-  id: string,
-  author_slug: User['key'],
-  title: string,
-  description: string,
-  media?: string,
-  content?: string,
-  type: Block['type'],
-  created_at: number,
-  updated_at: number,
-  filename?: string,
-  provider_url?: string,
-  image?: string,
-  source?: string,
-  attachment?: string,
-}
+export type BlockI = ConstructorParameters<typeof Block>[0]
 
 const ArenaTypes: Readonly<
-  Record<components['schemas']['Block']['type'], Block['type']>
+  Record<ArenaBlock['type'], Block['type']>
 > = Object.freeze({
   Text: 'text',
   Image: 'media',
@@ -34,7 +19,7 @@ const ArenaTypes: Readonly<
 
 export class Block implements Collectable {
   key: string
-  id: string
+  uid: string
   title: string = $state('')
   description: string = $state('')
   media?: string | undefined = $state('')
@@ -46,51 +31,57 @@ export class Block implements Collectable {
   created_at: number
   updated_at: number = $state(0)
   filename?: string | undefined
-  provider_url: string
-  image: string
-  source: string
-  attachment: string
+  provider_url?: string
+  image?: string
+  source?: string
+  attachment?: string
+  _author: string = ''
+  _connections = new Set<string>()
 
-  #author: string = ''
   get author() {
-    const a = users.get(this.#author)
-    if (!a) throw Error(`${this.#author} not found`)
+    const a = users.get(this._author)
+    if (!a) throw Error(`${this._author} not found`)
     return a
   }
-  #connections = new Set<string>()
   get connections() {
-    return [...this.#connections.values()].map(c => channels.get(c)).filter(c => c !== undefined)
+    return [...this._connections.values()].map(c => channels.get(c)).filter(c => c !== undefined)
   }
   addConnection(slug: string) {
-    this.#connections.add(slug)
+    this._connections.add(slug)
   }
 
-  constructor(b: BlockI) {
-    this.type = b.type
-    this.created_at = b.created_at
-    this.updated_at = b.updated_at
-    this.filename = b.filename
-    this.provider_url = b.provider_url
-    this.image = b.image
-    this.source = b.source
-    this.attachment = b.attachment
+  constructor(b: {
+    key: string,
+    author_slug: User['key'],
+    uid: string,
+    title: string,
+    description: string,
+    media?: string,
+    content?: string,
+    type: Block['type'],
+    created_at: number,
+    updated_at: number,
+    filename?: Block['filename'],
+    provider_url?: Block['provider_url'],
+    image?: Block['image'],
+    source?: Block['source'],
+    attachment?: Block['attachment'],
+  }) {
+    Object.assign(this, {
+      ...b,
+      _author: b.author_slug,
+      image: b.image ?? '',
+    })
 
-    this.id = `${b.id}`
-    this.key = this.id
-    this.title = b.title
-    this.description = b.description
-    this.media = b.media
-    this.content = b.content
-    this.#author = b.author_slug
     entries.set(this.key, this)
 
-    const user = users.get(this.#author)
+    const user = users.get(this._author)
     if (user) user.addEntry(this.key, 'blocks')
   }
 
   write() {
     return JSON.stringify({
-      id: this.id,
+      uid: this.uid,
       type: this.type,
       title: this.title,
       description: this.description,
@@ -101,14 +92,15 @@ export class Block implements Collectable {
       provider_url: this.provider_url,
       image: this.image,
       source: this.source,
-      author_slug: this.#author,
+      author_slug: this._author,
       attachment: this.attachment,
-      connections: [...this.#connections.values()]
+      connections: [...this._connections.values()]
     })
   }
   static fromArena(block: ArenaBlock) {
     const data: BlockI = {
-      id: block.id.toString(),
+      key: block.id.toString(),
+      uid: block.id.toString(),
       type: ArenaTypes[block.type],
       title: block.title ?? '',
       description: block.description?.markdown ?? '',
