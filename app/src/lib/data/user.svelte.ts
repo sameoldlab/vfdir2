@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { Collection, Channel, Entry } from "./types"
+import type { Collection, Channel, Entry, Base } from "./types"
 import { users, channels, entries } from "./maps.svelte"
 import type { ArenaUser } from "$lib/services/arena/types"
 
@@ -18,16 +18,7 @@ export class User implements Collection {
   ) {
     users.set(this.key, this)
   }
-  static create(
-    key: string,
-    name: string,
-    avatar?: string,
-  ) {
-    if (users.has(key)) {
-      return users.get(key)
-    }
-    return new User(key, name, avatar)
-  }
+
   static upsert(
     key: string,
     name: string,
