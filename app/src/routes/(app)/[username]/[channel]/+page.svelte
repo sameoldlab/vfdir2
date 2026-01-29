@@ -4,10 +4,29 @@
 	import { page } from '$app/state'
 	import View from '$lib/components/view.svelte'
 	import { channels } from '$lib/data/maps.svelte'
+	import { pool } from '$lib/database/connectionPool.svelte'
+	import { channelContents } from '$lib/services/arena/queries.remote'
+	import { persistChannel } from '$lib/services/arena/sync'
 	import type { Snapshot } from '@sveltejs/kit'
 
-	const channel = $derived(channels.get(page.params.channel))
-	const data = $derived(channel?.entries)
+	const channel = $derived(channels.get(page.params.channel!))
+	let errorMsg = $state('')
+
+	const syncContents = async (pageNo = 1) => {
+		const { error, data } = await channelContents({
+			id: page.params.channel!,
+			page: pageNo
+		})
+		if (error) {
+			errorMsg =
+				typeof error.error === 'string' ? error.error : error.error.message
+			return
+		}
+		const promises: Promise<void>[] = []
+		// promises.push(pool.exec(async (tx) => await persistChannel(tx, data.data)))
+		if (data.meta.has_more_pages) promises.push(syncContents(pageNo + 1))
+		await Promise.all(promises)
+	}
 
 	const scroll = (init = 0) => {
 		let val = $state(init)
@@ -32,11 +51,12 @@
 </script>
 
 {#if !channel}
-	<div class="error">Channel not saved. Fetching...</div>
-{:else if data.length === 0}
+	<div class="error">Channel not cached. Fetching...</div>
+{:else if channel.entries.length === 0}
 	<div class="error">
-		There doesn't seem to be anything here. Searching arena for a matching
-		channel.
+		<p>Channel is empty.</p>
+		<br />
+		Searching arena for a matching channel...
 		<p>
 			or... make one of your o-- <span class="text-4"
 				>sorry! haven't built this part yet</span
@@ -44,5 +64,5 @@
 		</p>
 	</div>
 {:else}
-	<View {data} {y} />
+	<View data={channel.entries} {y} />
 {/if}
