@@ -46,9 +46,7 @@
 	<form method="POST" action="/oauth/atproto?/connect" use:enhance>
 		<label for="atproto-connect">
 			<div class="row">
-				<span class="text-5"
-					><span class="text-4">@</span>proto did / pds url</span
-				>
+				<span class="text-5">atproto did or pds url</span>
 				<div class="text-4">
 					<a class="info" href="https://atproto.dev">?</a>
 				</div>
