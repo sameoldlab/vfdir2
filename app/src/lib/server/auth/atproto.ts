@@ -3,12 +3,12 @@ import { importJwkKey, OAuthClient, OAuthSession, scope, type AuthorizeTarget } 
 import {
   CompositeDidDocumentResolver,
   CompositeHandleResolver,
+  DohJsonHandleResolver,
   LocalActorResolver,
   PlcDidDocumentResolver,
   WebDidDocumentResolver,
   WellKnownHandleResolver,
 } from '@atcute/identity-resolver';
-import { NodeDnsHandleResolver } from '@atcute/identity-resolver-node';
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '$lib/convex/_generated/api';
 import type { AuthContext, AuthService } from './types';
@@ -108,7 +108,9 @@ const initClient = async (ctx: AuthContext, { domain, client_name }: AtpConfig) 
     actorResolver: new LocalActorResolver({
       handleResolver: new CompositeHandleResolver({
         methods: {
-          dns: new NodeDnsHandleResolver(),
+          dns: new DohJsonHandleResolver({
+            dohUrl: 'https://mozilla.cloudflare-dns.com/dns-query',
+          }),
           http: new WellKnownHandleResolver(),
         },
       }),
@@ -130,6 +132,7 @@ export function newAtpService(config: AtpConfig): AuthService<'atproto', OAuthSe
     getClient: async (ctx: AuthContext) => client ?? await initClient(ctx, config),
     authorize: async (ctx, { sessionKey, returnTo, target }) => {
       client = client ?? await initClient(ctx, config)
+      console.log('authorizing...')
       const { url, stateId } = await client.authorize({
         target,
         state: {
