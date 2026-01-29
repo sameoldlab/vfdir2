@@ -116,10 +116,10 @@ importers:
         specifier: ^4.0.2
         version: 4.0.2
       prettier:
-        specifier: ^3.7.4
+        specifier: ^3.4.2
         version: 3.7.4
       prettier-plugin-svelte:
-        specifier: ^3.4.1
+        specifier: ^3.3.3
         version: 3.4.1(prettier@3.7.4)(svelte@5.46.1)
       superstruct:
         specifier: ^2.0.2
