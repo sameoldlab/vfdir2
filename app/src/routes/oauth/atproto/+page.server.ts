@@ -19,8 +19,16 @@ export const actions = {
       const identifier = (await request.formData()).get('atproto-connect')
       if (!identifier) error(403, { message: JSON.stringify([{ field: 'atproto-connect', error: 'is null' }]) })
       console.log({ identifier })
+      const atpService = locals.ctx.services.get('atproto')
+      const client = await atpService.getClient(locals.ctx)
 
-      const atp = locals.ctx.services.get('atproto')!
+      const { url: authUrl } = await client.authorize({
+        target: {
+          type: 'account',
+          identifier: identifier.toString() as ActorIdentifier
+        }
+      })
+      /* const atp = locals.ctx.services.get('atproto')!
       const { url: authUrl } = await atp.authorize(locals.ctx, {
         sessionKey: locals.sessionKey,
         /* target: identifier.toString().startsWith('https://') ? {
@@ -29,12 +37,12 @@ export const actions = {
         } : {
           type: 'account',
           identifier: identifier.toString() as ActorIdentifier
-        } */
+        } * /
         target: {
           type: 'account',
           identifier: identifier.toString() as ActorIdentifier
         }
-      })
+      }) */
       console.log({ authUrl })
       redirect(302, authUrl);
     } catch (err) {
