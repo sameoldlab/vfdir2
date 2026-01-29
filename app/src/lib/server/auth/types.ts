@@ -1,6 +1,5 @@
 import type { api } from "$lib/convex/_generated/api";
-import type { ActorIdentifier } from "@atcute/lexicons";
-import type { OAuthClient, OAuthSession } from "@atcute/oauth-node-client";
+import type { AuthorizeTarget, OAuthClient, OAuthSession } from "@atcute/oauth-node-client";
 import type { ConvexHttpClient } from "convex/browser";
 
 export type ServiceName = 'arena' | 'raindrop'
@@ -17,13 +16,12 @@ export interface AuthService<Kind extends 'oauth2' | 'atproto', TSession = strin
   name: 'atproto' | ServiceName
   auth_url?: Kind extends 'oauth2' ? string : never
   getClient?: Kind extends 'oauth2' ? never : (ctx: AuthContext) => Promise<OAuthClient>
-  authorize?: Kind extends 'oauth2' ? never : (
+  authorize: Kind extends 'oauth2' ? never : (
     ctx: AuthContext,
     options: {
       sessionKey: string;
-      returnTo: string;
-      identifier?: ActorIdentifier
-      serviceUrl?: string
+      returnTo?: string;
+      target: AuthorizeTarget
     }
   ) => Promise<{ url: string; stateId: string }>;
 

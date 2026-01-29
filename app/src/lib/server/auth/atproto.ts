@@ -128,18 +128,8 @@ export function newAtpService(config: AtpConfig): AuthService<'atproto', OAuthSe
   return {
     name: 'atproto',
     getClient: async (ctx: AuthContext) => client ?? await initClient(ctx, config),
-    authorize: async (ctx, { sessionKey, returnTo, ...opts }) => {
+    authorize: async (ctx, { sessionKey, returnTo, target }) => {
       client = client ?? await initClient(ctx, config)
-      const identifier = opts.identifier
-      const serviceUrl = opts.serviceUrl
-      const target: AuthorizeTarget = identifier ? {
-        type: 'account',
-        identifier
-      } : {
-        type: 'pds',
-        serviceUrl
-      }
-
       const { url, stateId } = await client.authorize({
         target,
         state: {
