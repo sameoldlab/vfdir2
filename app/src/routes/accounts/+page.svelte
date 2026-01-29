@@ -55,8 +55,8 @@
 			</div>
 			<input type="text" name="atproto-connect" placeholder="cool-site.me" />
 		</label>
+		<button class="btn text-4">continue.</button>
 	</form>
-	<button class="btn text-4" type="submit">continue.</button>
 </div>
 
 <style>
