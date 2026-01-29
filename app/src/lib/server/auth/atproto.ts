@@ -156,8 +156,8 @@ export function newAtpService(config: AtpConfig): AuthService<'atproto', OAuthSe
       return {
         session: JSON.stringify(session),
         userId: session.did,
-        displayName: null,
-        expiresAt: null
+        displayName: session.handle,
+        expiresAt: (await session.getTokenInfo()).expiresAt?.valueOf()
       }
     },
     restore: (sessionData: string) => client.restore((
