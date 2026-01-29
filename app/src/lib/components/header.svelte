@@ -62,7 +62,7 @@
 			</div>
 		{/if}
 		<Omnibar />
-		 -->
+		-->
 	</nav>
 	<div class="main">
 		<button class="text-6" popovertarget={addChannelId} onclick={() => {}}
