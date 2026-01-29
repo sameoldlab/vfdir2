@@ -1,5 +1,5 @@
 import { env as penv } from '$env/dynamic/private'
-import { importJwkKey, OAuthClient, OAuthSession, scope, type AuthorizeTarget } from '@atcute/oauth-node-client'
+import { importJwkKey, OAuthClient, OAuthResolverError, OAuthSession, scope, type AuthorizeTarget } from '@atcute/oauth-node-client'
 import {
   CompositeDidDocumentResolver,
   CompositeHandleResolver,
@@ -133,14 +133,23 @@ export function newAtpService(config: AtpConfig): AuthService<'atproto', OAuthSe
     authorize: async (ctx, { sessionKey, returnTo, target }) => {
       client = client ?? await initClient(ctx, config)
       console.log('authorizing...')
-      const { url, stateId } = await client.authorize({
+      // const { url, stateId } = await
+      return client.authorize({
         target,
         state: {
           sessionKey,
           returnTo: returnTo ?? '/accounts'
+        },
+      }).then(({ url, stateId }) => {
+        return { url: url.toString(), stateId }
+      }).catch(e => {
+        if (e instanceof OAuthResolverError) {
+          console.error(e.cause)
+          console.trace(e.stack)
+          throw e
         }
       })
-      return { url: url.toString(), stateId }
+      // return { url: url.toString(), stateId }
     },
     callback: async (ctx, params) => {
       client = client ?? await initClient(ctx, config)
