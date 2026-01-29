@@ -6,6 +6,7 @@
 	import { micromark } from 'micromark'
 	import { blur } from 'svelte/transition'
 	import type { Entry } from '$lib/data/types'
+	import { naturalDate } from '$lib/utils/naturalDate'
 
 	let { ...c }: Entry = $props()
 	const connect = (e: MouseEvent) => {
@@ -31,15 +32,18 @@
 		const el = e.target as HTMLImageElement
 		el.classList.add('loaded')
 	}
+	const genRoute = () => {
+		if (c.type !== 'channel') return  `/block/${c.key}`
+		if (c.key.includes(c.author.key)) return c.key
+		return `/${c.author.key}/${c.key}`
+	}
 </script>
 
 <div class="block-item {status}" id={c.key}>
 	<div class="box">
 		<a
 			class={c.type}
-			href={c.type === 'channel'
-				? `/${c.author.key}/${c.key}`
-				: `/block/${c.key}`}
+			href={genRoute()}
 		>
 			{#if c.image}
 				<img
@@ -58,8 +62,9 @@
 				></video>
 			{:else if c.type === 'channel'}
 				<div class="channel">
-					<p class="title">{c.title}</p>
-					<p class="author">by {c.author.key}</p>
+					<p class="title">{c.title} [{c.entries.length}]</p>
+					<p class="author">by {c.author.name}</p>
+					<p> {naturalDate(c.updated_at)}</p>
 				</div>
 			{:else if content}
 				<div class="text"><p>{@html content}</p></div>
