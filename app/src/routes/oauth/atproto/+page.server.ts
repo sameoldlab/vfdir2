@@ -29,6 +29,10 @@ export const actions = {
         } : {
           type: 'account',
           identifier: identifier.toString() as ActorIdentifier
+        } */
+        target: {
+          type: 'account',
+          identifier: identifier.toString() as ActorIdentifier
         }
       })
       console.log({ authUrl })
