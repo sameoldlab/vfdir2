@@ -22,7 +22,7 @@ export const actions = {
       const atpService = locals.ctx.services.get('atproto')
       const client = await atpService.getClient(locals.ctx)
 
-      const { url: authUrl } = await client.authorize({
+      const res = await client.authorize({
         target: {
           type: 'account',
           identifier: identifier.toString() as ActorIdentifier
@@ -43,8 +43,9 @@ export const actions = {
           identifier: identifier.toString() as ActorIdentifier
         }
       }) */
-      console.log({ authUrl })
-      redirect(302, authUrl);
+      if (!res.url) error(501, 'Fml')
+      console.log({ url: res.url })
+      redirect(302, res.url);
     } catch (err) {
       if (err instanceof DidNotFoundError) {
         // handle has no DID record
@@ -63,6 +64,7 @@ export const actions = {
         console.error(`HandleResolutionError: ${err.message}`)
       }
       console.error(err)
+      console.error(`cause: ${err.cause}`)
       error(500, err)
     }
   }
