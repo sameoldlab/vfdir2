@@ -60,8 +60,9 @@
 			<div class="section">
 				{data.size} <span class="label">items</span>
 			</div>
-		{/if} -->
+		{/if}
 		<Omnibar />
+		 -->
 	</nav>
 	<div class="main">
 		<button class="text-6" popovertarget={addChannelId} onclick={() => {}}

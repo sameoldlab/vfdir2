@@ -58,8 +58,8 @@
 		<a href="/" aria-label="home"> ~ </a>/
 		{#if page.params.channel}
 			{@render route(page)}
-		{:else if 'channel' in ($tree.at(-1)?.params ?? {})}
-			{@render route($tree.at(-1))}
+		{:else if 'channel' in (tree.at(-1)?.params ?? {})}
+			{@render route(tree.at(-1))}
 		{/if}
 	</div>
 	<div id="omninput" popover="auto" use:trigger>
