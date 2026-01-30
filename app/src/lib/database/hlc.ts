@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { ulid, type ULID } from "ulidx"
+import { type ULID } from "ulidx"
 /** Unix timestamp */
 type Timestamp = number
-type SOURCE_ID = 'are.na' | 'filesystem' | ULID
+type SOURCE_ID = 'arena' | 'atproto' | 'raindrop' | 'filesystem' | ULID
 export type HLC = `${Timestamp}:${number}:${SOURCE_ID}`
 
 export class Hlc {

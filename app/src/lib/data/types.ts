@@ -9,6 +9,7 @@ export type Media = {
   value: string
 }
 export type Entry = ({ type: 'channel' } & Channel) | Block
+export type EntryI = ChannelI | BlockI
 export type Service = 'arena' | 'atproto' | 'raindrop'
 export interface Base {
   key: string

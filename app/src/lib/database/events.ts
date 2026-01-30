@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { ULID } from "ulidx"
-import type { ArenaChannel, ArenaEntry, ArenaConnection, ArenaUser } from "$lib/services/arena/types"
 import type { DB } from "@vlcn.io/crsqlite-wasm"
 import { Hlc, type HLC } from "./hlc"
 import type { StmtAsync, TXAsync } from "@vlcn.io/xplat-api"
-import type { Entry } from "$lib/data/types"
 import { browser } from "$app/environment"
+import type { ConnectionI, Entry, EntryI, Service, User } from "$lib/data/types"
 
 const VERSION = 1
 let stmt: StmtAsync | null = null
@@ -53,9 +52,9 @@ export type EventSchema<O extends object> = {
   data: O
   /**
    * add|mod|delete-column|row
-   * @example mod:title
+   * @example add:block
    */
-  type: string
+  type: 'mod' | 'connect' | `${'add' | 'delete'}:${'user' | 'block' | 'channel'}`
   /** 
    * field to which the event is related 
    * @example block:0L239vsDajfdse...
@@ -63,66 +62,48 @@ export type EventSchema<O extends object> = {
   objectId: string
 }
 
-export const diffEntry = <D extends ArenaEntry>(db: DB | TXAsync,
-  { data, current, objectId, originId }:
+const diffEntry = (db: DB | TXAsync,
+  { data, current, ...ids }:
     {
-      data: D,
+      data: EntryI,
       current: Entry,
-      originId: () => HLC,
+      originId: HLC,
       objectId: HLC
     }
 ) => {
-  const promises: Promise<void>[] = []
-  if (data.title && current.title !== data.title)
-    promises.push(record(db, {
-      objectId, type: 'mod:title', originId: originId(), data: {
-        title: data.title
-      }
-    }))
-  if (data.type === 'Channel' && current.type === 'channel') {
-    if (data.visibility && current.status !== data.visibility)
-      promises.push(record(db, {
-        objectId, type: 'mod:status', originId: originId(), data: {
-          status: data.visibility
-        }
-      }))
-    if (data.description?.markdown && current.description !== data.description.markdown)
-      promises.push(record(db, {
-        objectId, type: 'mod:description', originId: originId(), data: {
-          description: data.description.markdown
-        }
-      }))
-  } else if (data.type !== 'Channel' && current.type !== 'channel') {
+  const diffs: Record<string, any> = {}
 
-    if ('content' in data && current.content !== data.content?.markdown)
-      promises.push(record(db, {
-        objectId, type: 'mod:content', originId: originId(), data: {
-          content: data.content?.markdown
-        }
-      }))
-    if (data.description?.markdown && current.description !== data.description.markdown)
-      promises.push(record(db, {
-        objectId, type: 'mod:description', originId: originId(), data: {
-          description: data.description.markdown
-        }
-      }))
+  if (current.title !== data.title)
+    diffs.title = data.title
+  if (current.description !== (data.description))
+    diffs.description = data.description
+  if (current.updated_at !== (data.updated_at))
+    diffs.updated_at = data.updated_at
+
+  if (data.type == 'channel' && current.type == 'channel') {
+    if (current.status !== (data.status))
+      diffs.status = data.status
   }
-  return Promise.all(promises)
+
+  return record(db, { data: diffs, type: 'mod', ...ids })
 }
 
 /** @warning check if object has already been recorded to avoid bloating event log */
-export const arena_entry_sync = async <D extends ArenaEntry>(db: DB | TXAsync, data: D, current?: Entry) => {
-  const classType = data.type == 'Channel' ? 'channel' : 'block'
-  const objectId = `${classType}:${data.id}` as const
-  const updated_at = new Date(data.updated_at).valueOf()
-  let c = -1
-  const originId = (): HLC => hlc().receive(`${updated_at}:${c++}:arena`)
+export const record_entry = async (
+  db: DB | TXAsync,
+  data: EntryI,
+  current: Entry | undefined,
+  { service, updated_at }: { service: Service, updated_at: number }
+) => {
+  const classType = data.type === 'channel' ? 'channel' : 'block'
+  const objectId = `${classType}:${data.key}` as const
+  const originId = hlc().receive(`${updated_at}:0:${service}`)
 
   if (!current) {
     return record(db, {
       objectId,
       type: `add:${classType}`,
-      originId: originId(),
+      originId: originId,
       data
     })
   }
@@ -131,37 +112,28 @@ export const arena_entry_sync = async <D extends ArenaEntry>(db: DB | TXAsync, d
   return diffEntry(db, { data, current, objectId, originId })
 }
 
-
 /** @warning check if object has already been recorded to avoid bloating event log */
-export const arena_user_import = async (db: DB | TXAsync, user: Partial<ArenaUser>) => {
-  const objectId = `user:${user.id}`
+export const record_user = async (db: DB | TXAsync, user: Partial<User>) => {
+  const objectId = `user:${user.key}`
   const originId: HLC = hlc().receive(`${Date.now()}:0:arena`)
   return record(db, { objectId, type: `add:user`, originId, data: user })
 }
 
 /** @warning check if object has already been recorded to avoid bloating event log */
-export const arena_connection_import = (
+export const record_connection = (
   db: DB | TXAsync,
-  parent: ArenaChannel,
-  { connection: conn, ...child }: ArenaEntry,
+  data: ConnectionI,
+  service: Service
 ) => {
-  if (!conn) throw Error('invalid input: child does contain connection')
-
-  const objectId = `connection:${JSON.stringify([parent.id, child.id])}`
-  const connected_at = new Date(conn.connected_at).valueOf()
-  const originId: HLC = hlc().receive(`${connected_at}:0:arena`)
-
+  // TODO: diff connections for changes to position
   return record(db, {
-    objectId, type: `connect`, originId, data: {
-      parent,
-      child,
-      position: conn.position,
-      connected_at,
-      is_channel: child.type === 'Channel',
-      selected: conn.pinned,
-    }
+    objectId: `connection:${JSON.stringify([data.parent_id, data.child_id])}`,
+    type: `connect`,
+    originId: hlc().receive(`${data.connected_at}:0:${service}`),
+    data
   })
 }
+
 /* 
   Need a different way to track the order of changes as the data from the api does not record updates
   to the connection data (selected, position).
@@ -238,20 +210,14 @@ export const lcl_user_mod = (data) => { }
 /* 
 # Function
 - pull from are.na
-- pull from filesystem
-
-# Action
-- push to are.na
-
+-
 # Event
 - add channel, block
 - create connection
 -
-- remove connection
+# Transaction
+- send request to service
 - 
-- modify block
-- delete block
-- delete channel
 
 
 - i think uhat might be it?
