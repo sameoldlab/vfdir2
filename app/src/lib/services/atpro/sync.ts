@@ -113,10 +113,8 @@ export async function persistCosmikEntries(db: DB | TXAsync, newEntries: Record[
   await Promise.all(newEntries.reduce((a: Promise<void | void[]>[], b) => {
     const e = normalizeEntry(b)
     if (e) a.push(record_entry(db, e, entries.get(e.key), {
-      key: e.key,
       service: 'atproto',
       updated_at: e.updated_at,
-      classType: e.type === 'channel' ? 'channel' : 'block',
     }))
     return a
   }, []))
