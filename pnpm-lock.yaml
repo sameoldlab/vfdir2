@@ -119,10 +119,10 @@ importers:
         specifier: ^7.10.1
         version: 7.10.1(typescript@5.9.3)
       prettier:
-        specifier: ^3.4.2
+        specifier: ^3.7.4
         version: 3.7.4
       prettier-plugin-svelte:
-        specifier: ^3.3.3
+        specifier: ^3.4.1
         version: 3.4.1(prettier@3.7.4)(svelte@5.46.1)
       runed:
         specifier: ^0.37.1
