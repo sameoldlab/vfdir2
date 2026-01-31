@@ -40,17 +40,6 @@ export class Connection {
     }
     return Object.assign(child, this) as Entry & Connection
   }
-  static fromArena(conn: ArenaConnection, child: ArenaEntry): ConnectionI {
-    return {
-      key: `${conn.id}:${child.id}`,
-      parent_id: conn.id.toString(),
-      child_id: child.type === 'Channel' ? child.slug : child.id.toString(),
-      position: conn.position,
-      pinned: conn.pinned ?? false,
-      connected_at: new Date(conn.connected_at).valueOf(),
-      connected_by: conn.connected_by?.slug ?? ''
-    }
-  }
 }
 export type ChannelI = ConstructorParameters<typeof Channel>[0]
 export class Channel implements Collection, Collectable {
@@ -123,24 +112,6 @@ export class Channel implements Collection, Collectable {
     const existing = channels.get(obj.key)
     if (existing) return existing
     return new Channel(obj)
-  }
-  static fromArena(c: ArenaChannel): ChannelI {
-    // const flags = [c.kind] as ChannelParsed['flags']
-    // if (c.collaboration) flags.push('collaboration')
-    // if (c.published) flags.push('published')
-
-    return {
-      key: c.slug,
-      type: 'channel',
-      title: c.title,
-      uid: c.id.toString(),
-      description: c.description?.markdown ?? '',
-      created_at: new Date(c.created_at).valueOf(),
-      updated_at: new Date(c.updated_at).valueOf(),
-      status: c.visibility,
-      // source: 'arena',
-      author: c.owner.slug,
-    }
   }
 }
 

@@ -97,30 +97,4 @@ export class Block implements Collectable {
       connections: [...this._connections.values()]
     })
   }
-  static fromArena(block: ArenaBlock) {
-    const data: BlockI = {
-      key: block.id.toString(),
-      uid: block.id.toString(),
-      type: ArenaTypes[block.type],
-      title: block.title ?? '',
-      description: block.description?.markdown ?? '',
-      created_at: new Date(block.created_at).valueOf(),
-      updated_at: new Date(block.updated_at).valueOf(),
-      content: block.type === 'Text' ? block.content.markdown : '',
-      filename: block.type === 'Attachment' ? block.attachment?.url : '',
-      provider_url: block.source?.provider ? block.source.provider.url : '',
-      image: block.type !== 'Text' && block.image ? block.image.large.src : undefined,
-      source: block.source?.url || '',
-      author_slug: block.user.slug,
-      attachment: block.type === 'Attachment' ? block.attachment.url : undefined
-    }
-
-    new User(block.user.slug, block.user.name, block.user.avatar ?? '')
-
-    // db.exec(`insert or ignore into Providers values (?,?);`, [
-    // 	data.source.provider.url,
-    // 	data.source.provider.name
-    // ])
-    return data
-  }
 }
