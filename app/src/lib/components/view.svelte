@@ -34,6 +34,6 @@
 <style>
 	div {
 		height: 100%;
-		overflow-x: scroll;
+		overflow: auto;
 	}
 </style>
