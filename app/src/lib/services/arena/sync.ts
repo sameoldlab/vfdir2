@@ -38,7 +38,7 @@ const normalizeEntry = (obj: ArenaEntry) => {
 			created_at: new Date(obj.created_at).valueOf(),
 			updated_at: new Date(obj.updated_at).valueOf(),
 			status: obj.visibility,
-			author: obj.owner.slug
+			author_slug: obj.owner.slug
 		}
 		return entry
 	}
