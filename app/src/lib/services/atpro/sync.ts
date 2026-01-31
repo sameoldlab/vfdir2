@@ -50,7 +50,7 @@ const normalizeEntry = (rec: Record) => {
       created_at,
       updated_at,
       status: rec.value.accessType === 'OPEN' ? 'public' : 'closed',
-      author: rec.uri.split('/')[2]!,
+      author_slug: rec.uri.split('/')[2]!,
     }
     return entry
   }

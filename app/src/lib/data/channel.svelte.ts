@@ -79,11 +79,10 @@ export class Channel implements Collection, Collectable {
     updated_at: number,
     status: 'private' | 'public' | 'closed',
     image?: string | undefined,
-    author: string,
+    author_slug: string,
   }) {
     Object.assign(this, {
-      ...obj,
-      _author: obj.author,
+      _author: obj.author_slug,
       image: obj.image ?? '',
     })
 
