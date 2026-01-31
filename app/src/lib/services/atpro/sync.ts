@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { DB } from '@vlcn.io/crsqlite-wasm'
-import { ev_stmt_close, record_connection, record_entry } from '$lib/database/events'
+import { record_connection, record_entry } from '$lib/database/events'
 import type { TXAsync } from '@vlcn.io/xplat-api'
 import {
   ComAtprotoRepoStrongRef,
@@ -10,7 +10,7 @@ import {
   NetworkCosmikCollectionLink
 } from "$lib/services/atlex"
 import { entries, channels } from '$lib/data/maps.svelte'
-import type { Record } from '@atcute/atproto/types/repo/listRecords'
+import type { Record as AtRecord } from '@atcute/atproto/types/repo/listRecords'
 import { is, type ResourceUri } from '@atcute/lexicons'
 import type { BlockI, ChannelI, ConnectionI } from '$lib/data/types'
 
@@ -22,22 +22,25 @@ const atpKey = (uri: ResourceUri) => {
   return `${did}/${collection}/${hash}`
 }
 
-const normalizeConnection = (rec: Record) => {
+const normalizeConnection = (rec: AtRecord) => {
   if (is(NetworkCosmikCollectionLink.mainSchema, rec.value)) {
     const entry: ConnectionI = {
       key: '',
       parent_id: atpKey(rec.value.collection.uri),
-      child_id: atpKey(rec.value.originalCard?.uri ?? rec.value.card.uri),
+      child_id: atpKey(rec.value.card.uri),
       position: 'position' in rec.value ? rec.value.position as number : Infinity,
       pinned: 'pinned' in rec.value ? rec.value.pinned as boolean : false,
       connected_at: new Date(rec.value.addedAt).valueOf(),
       connected_by: rec.value.addedBy,
+      rest: {
+        orginal_card: rec.value.originalCard ? atpKey(rec.value.originalCard?.uri) : undefined
+      }
     }
     return entry
   }
 }
 
-const normalizeEntry = (rec: Record) => {
+const normalizeEntry = (rec: AtRecord) => {
   if (is(NetworkCosmikCollection.mainSchema, rec.value)) {
     const created_at = rec.value.createdAt ? new Date(rec.value.createdAt).valueOf() : Date.now()
     const updated_at = rec.value.updatedAt ? new Date(rec.value.updatedAt).valueOf() : created_at ?? Date.now()
@@ -55,7 +58,11 @@ const normalizeEntry = (rec: Record) => {
     return entry
   }
 
-  if (!is(NetworkCosmikCard.mainSchema, rec.value)) return
+  if (!is(NetworkCosmikCard.mainSchema, rec.value)) {
+    console.error('invalid schema')
+    return
+  }
+
   const created_at = rec.value.createdAt ? new Date(rec.value.createdAt).valueOf() : Date.now()
   const updated_at = 'updatedAt' in rec.value ? new Date((rec.value.updatedAt as string)).valueOf() : created_at ?? Date.now()
   const author_slug = 'provenance' in rec.value
@@ -107,31 +114,29 @@ const normalizeEntry = (rec: Record) => {
 }
 
 /** Save an array of atproto `network.cosmik.Card` or `network.cosmik.Collection` records */
-export async function persistCosmikEntries(db: DB | TXAsync, newEntries: Record[]) {
-  console.debug(`recording events with ${entries.size} entries materialized`)
+export function persistCosmikEntries(db: DB | TXAsync, newEntries: AtRecord[]) {
+  console.debug(`recording ${newEntries.length} events with ${entries.size} entries materialized`)
 
-  await Promise.all(newEntries.reduce((a: Promise<void | void[]>[], b) => {
+  return newEntries.reduce((a: Promise<void>[], b) => {
     const e = normalizeEntry(b)
     if (e) a.push(record_entry(db, e, entries.get(e.key), {
       service: 'atproto',
       updated_at: e.updated_at,
     }))
     return a
-  }, []))
-    .then(() => ev_stmt_close(db))
+  }, [])
 }
 
 /** Save an array of atproto `network.cosmik.CollectionLink` records */
-export async function persistCosmikConnections(db: DB | TXAsync, connections: Record[]) {
-  console.debug(`recording events with ${entries.size} entries materialized`)
+export function persistCosmikConnections(db: DB | TXAsync, connections: AtRecord[]) {
+  console.debug(`recording ${connections.length} events with ${entries.size} entries materialized`)
 
-  await Promise.all(connections.reduce((a: Promise<void | void[]>[], b) => {
+  return connections.reduce((a: Promise<void>[], b) => {
     const e = normalizeConnection(b)
     if (e && !channels.get(e.parent_id)?.entries.find(e2 => e2.child_id === e.child_id)) {
       a.push(record_connection(db, e, 'atproto'))
     }
     return a
-  }, []))
-    .then(() => ev_stmt_close(db))
+  }, [])
 }
 
