@@ -35,7 +35,7 @@
 		{:else if b.type === 'channel'}
 			<div class="channel">
 				<p class="title">{b.title}</p>
-				<p class="author">by {b.author.key}</p>
+				<p class="author">by {b.author?.name}</p>
 			</div>
 		{:else if content}
 			<div class="text"><p>{@html content}</p></div>
@@ -65,7 +65,7 @@
 			</div>
 			<div class="data-item">
 				<p>By</p>
-				<a href={'/' + b.author.key}> {b.author.key} </a>
+				<a href={'/' + b.author.key}> {b.author.name} </a>
 			</div>
 
 			{#if b.source}
