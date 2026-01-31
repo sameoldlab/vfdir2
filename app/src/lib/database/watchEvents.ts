@@ -2,11 +2,11 @@
 
 import { EventSchemaR } from "./schema"
 import { create } from "superstruct"
-import type { DB, StmtAsync, TXAsync } from "@vlcn.io/xplat-api"
+import type { DB, TXAsync } from "@vlcn.io/xplat-api"
 import { Block } from '$lib/data/block.svelte'
-import { Channel, Connection } from '$lib/data/channel.svelte'
+import { Channel } from '$lib/data/channel.svelte'
+import type { ConnectionI, EntryI } from "$lib/data/types"
 import { User } from '$lib/data/user.svelte'
-import type { ArenaBlock, ArenaChannel, ArenaEntry } from "$lib/services/arena/types"
 import { channels, entries, media, persistData } from "$lib/data/maps.svelte"
 import { pool } from "./connectionPool.svelte"
 import { PersistedState } from 'runed'
@@ -19,7 +19,7 @@ let lastRow = new PersistedState('lastRow', 0n, {
   }
 })
 
-let channel: BroadcastChannel
+let channel: BroadcastChannel | null
 const getChannel = () => {
   if (channel) return channel
   channel = new BroadcastChannel('updates')
@@ -38,13 +38,14 @@ export async function bootstrap(db: TXAsync | DB) {
 
 /** initialize broadcast channel watcher. auto-pulls new events into maps */
 export const watchEvents = () => {
-  if (!browser) return
+  console.debug('The Watcher stands prepared')
   getChannel().addEventListener('message', ev => {
     if (ev.data) {
       const ub: bigint[] = [...ev.data.values()]
       pool.exec(async (tx, db) => {
         await db.execO('select *,rowid from log where rowid between ? and ?', [ub[0]!, ub.at(-1)!])
           .then((events) => {
+            console.debug(`reading ${events.length} events live`)
             parseEvent(events)
             console.error('FINISH THE PERSIST FUNCTION!!')
             // persistData().then(() => lastRow.current = ub.at(-1)!)
@@ -55,22 +56,6 @@ export const watchEvents = () => {
   })
 }
 
-const pullUsers = (data: ArenaEntry) => {
-  if (data.type === 'Channel') {
-    User.upsert(
-      data.owner.slug,
-      data.owner.name,
-      data.owner.avatar || undefined,
-    )
-  } else if (data.base_type === 'Block') {
-    User.upsert(
-      data.user.slug,
-      data.user.name,
-      data.user.avatar || undefined
-    )
-  }
-}
-
 function parseEvent(events: object[]) {
   for (const e of events) {
     let {
@@ -79,51 +64,38 @@ function parseEvent(events: object[]) {
       data,
     } = create(e, EventSchemaR)
 
-    const from_arena = device === 'arena'
-    // add external users to object graph
-    if (from_arena) {
-      pullUsers(data as ArenaEntry)
-    }
+    console.debug({
+      type: [action, field],
+      originId: [_ts, _c, device],
+      data,
+    })
 
-    if (action === 'add') {
-      switch (field) {
-        case 'block': {
-          const obj = from_arena ? Block.fromArena(data as ArenaBlock) : data
-          if (entries.get(obj.id.toString())) {
-            console.error(`duplicate block event found at ${e.rowid} on ${obj.id}`)
-            // throw new Error(`duplicate block event found: ${obj.id}`)
-            break
-          }
-          new Block(obj)
-          break;
-        }
-        case 'channel': {
-          const obj = from_arena ? Channel.fromArena(data as ArenaChannel) : data
-          if (entries.get(obj.slug)) {
-            console.error(`duplicate block event found at ${e.rowid} on ${obj.slug}`)
-            // throw new Error(`duplicate channel event found: ${obj.slug}`)
-            break
-          }
-          new Channel(obj)
-          break
-        }
+    // TODO: runtime data validation
+    if (action === 'add' && field === 'user') {
+      const user = data as unknown as User
+      User.upsert(user.key, user.name, user.avatar)
+    } else if (action === 'add') {
+      const obj = data as unknown as EntryI
+      if (entries.get(obj.key)) {
+        console.error(`duplicate block event found at ${e.rowid} on ${obj.key}`)
+        throw new Error(`duplicate channel event found: ${obj.key}`)
+        break
       }
-    }
-    if (action === 'connect') {
-      const key = data.is_channel ? data.child.slug : data.child.id.toString();
-      (entries.get(key) ?? (data.is_channel
-        ? new Channel(Channel.fromArena(data.child as ArenaChannel))
-        : new Block(Block.fromArena(data.child as ArenaBlock)))
-      ).addConnection(data.parent.slug)
+      if (obj.type === 'channel') Channel.upsert(obj)
+      else new Block(obj)
+    } else if (action === 'connect') {
+      const conn = data as unknown as ConnectionI
 
-      let parent = channels.get(data.parent.slug)
-      if (!parent) {
-        const chan = from_arena ? Channel.fromArena(data.parent as ArenaChannel) : data.parent;
-        new Channel(chan)
-      }
-      parent.addEntry(Connection.fromArena(data))
+      const child = entries.get(conn.child_id)
+      let parent = channels.get(conn.parent_id)
+      if (!parent) throw new Error(`connection recorded before parent: ${conn.parent_id}`)
+      if (!child) throw new Error(`connection recorded before child: ${conn.child_id}`)
+
+      child.addConnection(conn.parent_id)
+      parent.addEntry(data as unknown as ConnectionI)
+    } else if (action === 'save') {
+      media.set(data.original as string, data.url)
     }
-    if (action === 'save') media.set(data.original, data.url)
   }
 }
 
