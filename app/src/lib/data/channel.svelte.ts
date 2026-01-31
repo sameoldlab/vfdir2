@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { ArenaChannel, ArenaConnection, ArenaEntry } from "$lib/services/arena/types"
 import { entries, channels, users } from "./maps.svelte"
-import type { Collectable, Entry, Collection, User, Block } from "./types"
+import type { Collectable, Entry, Collection, User } from "./types"
 
 export type ConnectionI = ConstructorParameters<typeof Connection>[0]
 export class Connection {
@@ -71,6 +70,7 @@ export class Channel implements Collection, Collectable {
     author_slug: string,
   }) {
     Object.assign(this, {
+      ...obj,
       _author: obj.author_slug,
       image: obj.image ?? '',
     })
