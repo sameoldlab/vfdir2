@@ -4,10 +4,10 @@
 	import Header from '$lib/components/header.svelte'
 	import { initStore } from '$lib/database/createTables'
 	import { pool } from '$lib/database/connectionPool.svelte'
-	import { onMount } from 'svelte'
+	import { onDestroy, onMount } from 'svelte'
 	import { beforeNavigate } from '$app/navigation'
 	import { setTree } from '$lib/stores.svelte'
-	import { bootstrap, watchEvents } from '$lib/database/watchEvents'
+	import { bootstrap, parseEvent } from '$lib/database/watchEvents'
 	import type { NavigationTarget } from '@sveltejs/kit'
 	let { children } = $props()
 
@@ -27,17 +27,45 @@
 				else tree.push(nav.from)
 		}
 	})
-
-	let ready = $state(true)
+	let channel: BroadcastChannel | null
+	const getChannel = () => {
+		if (channel) return channel
+		channel = new BroadcastChannel('updates')
+		return channel
+	}
+	let ready = $state(false)
 	onMount(() => {
 		console.debug('bootstrapping...')
 		pool.exec(async (tx) => {
 			await initStore(tx)
-			watchEvents()
+			// watchEvents()
 			await bootstrap(tx)
-			console.log('ready')
+			console.log('All is steady')
 			ready = true
 		})
+
+		getChannel().onmessage = (ev) => {
+			console.log('ack')
+			if (ev.data) {
+				const ub: bigint[] = [...ev.data.values()]
+				console.log({ ub, start: ub[0], end: ub.at(-1) })
+				pool.exec(async (tx) => {
+					const events = await tx.execO(
+						'select *,rowid from log where rowid between ? and ?',
+						[ub[0]!, ub.at(-1)!]
+					)
+					console.debug(`reading ${events.length} events live`)
+					parseEvent(events)
+					console.error('FINISH THE PERSIST FUNCTION!!')
+					// persistData().then(() => lastRow.current = ub.at(-1)!)
+				})
+				// .catch((err) => { console.error(err) })
+			}
+		}
+	})
+
+	onDestroy(() => {
+		channel?.close()
 	})
 </script>
 

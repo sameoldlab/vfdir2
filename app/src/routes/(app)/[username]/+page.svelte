@@ -1,42 +1,65 @@
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
 <script lang="ts">
-	import { page } from '$app/state'
 	import View from '$lib/components/view.svelte'
-	import { Block } from '$lib/data/block.svelte.js'
-	import { Channel } from '$lib/data/channel.svelte.js'
 	import { users } from '$lib/data/maps.svelte'
-	import { pullCosmik } from '$lib/services/atpro/pullCosmik'
+	import { pool } from '$lib/database/connectionPool.svelte.js'
+	import { ev_stmt_close, record_user } from '$lib/database/events.js'
+	import { persistChannels } from '$lib/services/arena/sync.js'
+	import {
+		persistCosmikConnections,
+		persistCosmikEntries
+	} from '$lib/services/atpro/sync.js'
+	import { getRouteCtx } from '$lib/stores.svelte.js'
 	import type { Snapshot } from '@sveltejs/kit'
 	import { untrack } from 'svelte'
 
+	const ctx = getRouteCtx()
 	const { data } = $props()
-	$inspect(data)
-	const username = $derived(
-		data.service === 'atproto' ? data.actor.did : page.params.username!
-	)
+	const user = $derived(users.get(ctx.user?.key))
 
+	let error: string | undefined = $state()
+	const contents = $derived(await data.contents)
 	$effect(() => {
-		if (!data.contents) return
-		data.contents.data
-		untrack(() => {
-			data.contents.data.forEach((e) => {
-				if (e.base_type === 'Block') {
-					new Block(Block.fromArena(e))
-					return
-				}
-				if (e.base_type === 'Channel') {
-					new Channel(Channel.fromArena(e))
-				}
-			})
-		})
+		if (ctx.user.key && !users.has(ctx.user.key)) {
+			console.log('trigger trigger, pull my finger')
+			pool.exec(async (db) =>
+				record_user(db, {
+					name: ctx.user.name,
+					key: ctx.user.key
+				})
+			)
+		}
+		if (!contents) return
+		console.log(contents)
+		switch (data.service) {
+			case 'arena':
+				pool.exec(async (tx) => persistChannels(tx, data.user, contents))
+
+				break
+			case 'atproto':
+				console.log('shoulda used tap')
+				pool.exec(async (tx) => {
+					return Promise.all(
+						[
+							persistCosmikEntries(tx, contents.collections),
+							persistCosmikEntries(tx, contents.cards),
+							persistCosmikConnections(tx, contents.connections)
+						].flat()
+					)
+						.then(console.debug)
+						.catch((err) => {
+							console.error(err)
+							error = err
+						})
+						.finally(() => ev_stmt_close(tx))
+				})
+				break
+			case 'raindrop':
+				break
+		}
 	})
 
-	const user = $derived(users.get(username))
-	$inspect(user)
-
-	// const user = $derived(users.get(page.params.username))
-	// const data = $derived(user?.entries)
 	const scroll = (init = 0) => {
 		let val = $state(init)
 		return {
@@ -57,25 +80,19 @@
 			y.val = value
 		}
 	}
-
-	$effect(() => {
-		if (data.service === 'atproto')
-			untrack(() => {
-				pullCosmik(data.actor)
-			})
-	})
 </script>
 
 <svelte:head>
-	<title>{data.actor?.handle ?? username} | vfdir</title>
+	<title>{ctx.user?.name} | vfdir</title>
 </svelte:head>
 
 {#if !user}
 	<div class="error">
-		User: {username} not found. Try searching one of their channels instead.
-		{#if data.service === 'atproto'}
+		{error}
+		User: {ctx.user?.key} not found. Try searching one of their channels instead.
+		{#if ctx.service === 'atproto'}
 			Are you sure this did is correct? <a
-				href="https://pdsls.dev/at://{username}#collections:network.cosmik"
+				href="https://pdsls.dev/at://{ctx.user.key}#collections:network.cosmik"
 				>Check on pdsls.dev</a
 			>
 		{:else}
