@@ -27,4 +27,8 @@
 	}
 </script>
 
+<div class="error">
+	placeholder for authenticated account private dashboard. Try going to your
+	atprocol profile (vfdir.same.supply/cool-site.me)
+</div>
 <View data={[]} {y} />
