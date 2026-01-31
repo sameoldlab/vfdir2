@@ -3,7 +3,7 @@
 import type { DB } from '@vlcn.io/crsqlite-wasm'
 import { ev_stmt_close, record_connection, record_entry } from '$lib/database/events'
 import type { TXAsync } from '@vlcn.io/xplat-api'
-import type { ArenaBlock, ArenaChannel, ArenaConnection, ArenaEntry } from './types'
+import type { ArenaBlock, ArenaChannel, ArenaConnection, ArenaEntry, ArenaUser } from './types'
 import { entries, channels } from '$lib/data/maps.svelte'
 import type { Block, BlockI, ChannelI, ConnectionI } from '$lib/data/types'
 
@@ -56,6 +56,9 @@ const normalizeEntry = (obj: ArenaEntry) => {
 	return entry
 }
 
+export async function persistChannels(db: DB | TXAsync, user: ArenaUser, aEntries: ArenaChannel[]) {
+
+}
 export async function persistEntries(db: DB | TXAsync, channel: ArenaChannel, aEntries: ArenaEntry[]) {
 	console.debug(`recording events with ${entries.size} entries materialized`)
 

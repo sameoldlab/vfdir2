@@ -8,7 +8,6 @@ import { Channel } from '$lib/data/channel.svelte'
 import type { ConnectionI, EntryI } from "$lib/data/types"
 import { User } from '$lib/data/user.svelte'
 import { channels, entries, media, persistData } from "$lib/data/maps.svelte"
-import { pool } from "./connectionPool.svelte"
 import { PersistedState } from 'runed'
 import { browser } from "$app/environment"
 
@@ -19,12 +18,6 @@ let lastRow = new PersistedState('lastRow', 0n, {
   }
 })
 
-let channel: BroadcastChannel | null
-const getChannel = () => {
-  if (channel) return channel
-  channel = new BroadcastChannel('updates')
-  return channel
-}
 
 /** Load past events into data maps */
 export async function bootstrap(db: TXAsync | DB) {
@@ -36,27 +29,7 @@ export async function bootstrap(db: TXAsync | DB) {
   return
 }
 
-/** initialize broadcast channel watcher. auto-pulls new events into maps */
-export const watchEvents = () => {
-  console.debug('The Watcher stands prepared')
-  getChannel().addEventListener('message', ev => {
-    if (ev.data) {
-      const ub: bigint[] = [...ev.data.values()]
-      pool.exec(async (tx, db) => {
-        await db.execO('select *,rowid from log where rowid between ? and ?', [ub[0]!, ub.at(-1)!])
-          .then((events) => {
-            console.debug(`reading ${events.length} events live`)
-            parseEvent(events)
-            console.error('FINISH THE PERSIST FUNCTION!!')
-            // persistData().then(() => lastRow.current = ub.at(-1)!)
-          })
-        // .catch((err) => { console.error(err) })
-      })
-    }
-  })
-}
-
-function parseEvent(events: object[]) {
+export function parseEvent(events: object[]) {
   for (const e of events) {
     let {
       type: [action, field],
@@ -81,21 +54,31 @@ function parseEvent(events: object[]) {
         throw new Error(`duplicate channel event found: ${obj.key}`)
         break
       }
-      if (obj.type === 'channel') Channel.upsert(obj)
+      if (obj.type === 'channel') new Channel(obj)
       else new Block(obj)
-    } else if (action === 'connect') {
+    } else if (action === 'save') {
+      media.set(data.original as string, data.url)
+    }
+  }
+  // second pass to process connections after entries
+  for (const e of events) {
+    let {
+      type: action,
+      originId: [_ts, _c, _device],
+      data,
+    } = create(e, EventSchemaR)
+
+    if (action === 'connect') {
       const conn = data as unknown as ConnectionI
 
       const child = entries.get(conn.child_id)
       let parent = channels.get(conn.parent_id)
-      if (!parent) throw new Error(`connection recorded before parent: ${conn.parent_id}`)
-      if (!child) throw new Error(`connection recorded before child: ${conn.child_id}`)
-
-      child.addConnection(conn.parent_id)
-      parent.addEntry(data as unknown as ConnectionI)
-    } else if (action === 'save') {
-      media.set(data.original as string, data.url)
+      if (!parent) console.error(`connection recorded before parent: ${conn.parent_id}`)
+      if (!child) console.error(`connection recorded before child: ${conn.child_id}`)
+      child?.addConnection(conn.parent_id)
+      parent?.addEntry(conn)
     }
+
   }
 }
 

@@ -11,13 +11,19 @@ export type VIEWS = typeof VIEWS[number]
 type TreeNode = NavigationTarget
 export const [getTree, setTree] = createContext<TreeNode[]>()
 
+type User<U = {}> = {
+  key: string,
+  name: string
+} & U
+
 export type RouteCtx = {
-  user: ArenaUser,
+  user: User<ArenaUser>,
   service: 'arena',
 } | {
-  user: ResolvedActor,
+  user: User<ResolvedActor>,
   service: 'atproto',
 } | {
   service: 'raindrop',
+  user: User,
 }
 export const [getRouteCtx, setRouteCtx] = createContext<RouteCtx>()
