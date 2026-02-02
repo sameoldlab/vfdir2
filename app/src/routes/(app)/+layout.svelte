@@ -28,11 +28,6 @@
 		}
 	})
 	let channel: BroadcastChannel | null
-	const getChannel = () => {
-		if (channel) return channel
-		channel = new BroadcastChannel('updates')
-		return channel
-	}
 	let ready = $state(false)
 	onMount(() => {
 		console.debug('bootstrapping...')
@@ -44,7 +39,8 @@
 			ready = true
 		})
 
-		getChannel().onmessage = (ev) => {
+		channel = new BroadcastChannel('updates')
+		channel.onmessage = (ev) => {
 			console.log('ack')
 			if (ev.data) {
 				const ub: bigint[] = [...ev.data.values()]
