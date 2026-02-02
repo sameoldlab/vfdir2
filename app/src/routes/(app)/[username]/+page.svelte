@@ -1,6 +1,8 @@
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
 <script lang="ts">
+	import { goto } from '$app/navigation'
+	import { page } from '$app/state'
 	import View from '$lib/components/view.svelte'
 	import { users } from '$lib/data/maps.svelte'
 	import { ev_stmt_close, record_user } from '$lib/database/events.js'
@@ -14,9 +16,12 @@
 	import { untrack } from 'svelte'
 
 	const ctx = getRouteCtx()
-	const pool =  getPool()
+	const pool = getPool()
 	const { data } = $props()
 	const user = $derived(users.get(ctx.user?.key))
+
+	const kind = $derived(page.url.searchParams.getAll('kind'))
+	const order = $derived(page.url.searchParams.get('order'))
 
 	let error: string | undefined = $state()
 	const contents = $derived(await data.contents)
@@ -80,6 +85,14 @@
 			y.val = value
 		}
 	}
+	const setFilter = (e: MouseEvent, key: string, kind: string) => {
+		if (e.shiftKey) {
+			page.url.searchParams.append(key, kind)
+		} else {
+			page.url.searchParams.set(key, kind)
+		}
+		goto(page.url)
+	}
 </script>
 
 <svelte:head>
@@ -102,5 +115,38 @@
 {:else if user.entries?.length === 0}
 	empty
 {:else}
-	<View data={user.entries} {y} />
+	<div class="row">
+		<button
+			class="text-4"
+			class:text-6={kind.length === 0}
+			onclick={() => {
+				const url = page.url.searchParams.delete('kind')
+				goto(page.url)
+			}}>all</button
+		>
+		{#each user.entries.reduce((a, e) => {
+			if (!a.includes(e.type)) a.push(e.type)
+			return a
+		}, []) as k}
+			<button
+				class="text-4"
+				class:text-6={kind.includes(k) || kind.length === 0}
+				onclick={(e) => setFilter(e, 'kind', k)}>{k}</button
+			>
+		{/each}
+	</div>
+	<View
+		data={user.entries
+			.filter((e) => {
+				if (!kind || kind.length === 0) return true
+				if (kind.includes('channel')) return e.type === 'channel'
+				if (kind.includes('block')) return e.type !== 'channel'
+				if (kind.includes('text')) return e.type === 'text'
+				if (kind.includes('link')) return e.type === 'link'
+				if (kind.includes('media')) return e.type === 'media'
+				if (kind.includes('attachment')) return e.type === 'attachment'
+			})
+			.sort((a, b) => b.created_at - a.created_at)}
+		{y}
+	/>
 {/if}
