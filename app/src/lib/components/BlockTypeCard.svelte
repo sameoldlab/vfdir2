@@ -23,24 +23,20 @@
 		return link
 	}
 	const source = !c.source ? null : c.type !== 'channel' ? c.source : makeLink()
-	const content = c.type === 'text' ? micromark(c.content ?? '') : null
+	const content = c.type === 'text' ? micromark(c.content ?? '') : c.type === 'link' && c.image === '' ? `<p>${c.description}</p>` : null
 	const imgLoad = (e: Event) => {
 		const el = e.target as HTMLImageElement
 		el.classList.add('loaded')
 	}
 	const genRoute = () => {
-		if (c.type !== 'channel') return  `/block/${c.key}`
-		if (c.key.includes(c.author.key)) return c.key
+		if (c.key.includes('/')) return `/${c.key}`
 		return `/${c.author.key}/${c.key}`
 	}
 </script>
 
-<div class="block-item {status}" id={c.key}>
+<div class="block-item {c.status}" id={c.key}>
 	<div class="box">
-		<a
-			class={c.type}
-			href={genRoute()}
-		>
+		<a class={c.type} href={genRoute()}>
 			{#if c.image}
 				<img
 					in:blur
