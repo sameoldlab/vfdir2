@@ -1,25 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import { dev } from '$app/environment'
 import initWasm, { type DB, type SQLite3 } from '@vlcn.io/crsqlite-wasm'
 import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
-import type { StmtAsync, TXAsync } from '@vlcn.io/xplat-api'
+import type { TXAsync } from '@vlcn.io/xplat-api'
 
 type DELETE = 9
 type INSERT = 18
 type UPDATE = 23
+type Table = 'log'
 type UpdateType = DELETE | INSERT | UPDATE
-type UpdateEvent = [type: UpdateType, db: string, table: string, rowid: bigint]
-type Data<V> = V[]
-type Query<V> = {
-	stmt: StmtAsync
-	bind: any[]
-	setData: Data<V>
-}
-const log = (...args: unknown[]) => {
-	if (dev)
-		console.debug(...args)
-}
 
 export type QueryData<T> = {
 	readonly loading: boolean;
@@ -40,23 +29,23 @@ export class DbPool {
 	) {
 		this.dbName = args?.dbName || 'vfdir.db'
 		this.#initSql().then(sqlite => {
-			this.#sqlite = sqlite
+			this.#sqlite = sqlite!
 		})
 	}
 
-	#updateBuffer = new Map<`${string}:${UpdateType}`, Set<bigint>>()
-	#timeout = null
+	#updateBuffer = new Map<`${Table}:${UpdateType}`, Set<bigint>>()
+	#timeout: NodeJS.Timeout | null = null
 	async #connect() {
 		this.#sqlite = this.#sqlite || await this.#initSql()
 
 		if (this.#connection) return this.#connection
 		try {
 			const connection = await this.#sqlite.open(this.dbName)
-			connection.onUpdate((type, db, table, row) => {
+			connection.onUpdate((type, _db, table: Table, row) => {
 				if (!this.#updateBuffer.has(`${table}:${type}`)) {
 					this.#updateBuffer.set(`${table}:${type}`, new Set())
 				}
-				this.#updateBuffer.get(`${table}:${type}`).add(row)
+				this.#updateBuffer.get(`${table}:${type}`)?.add(row)
 
 				if (this.#timeout === null) this.#timeout = setTimeout(() =>
 					this.#batchSubscribe()
