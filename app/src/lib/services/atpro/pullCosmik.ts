@@ -86,18 +86,6 @@ async function* listCollections(xrpc: Client, params: RecordParams) {
   } while (cursor)
 }
 
-const crawlCosmic = async (xrpc: Client, params: RecordParams) => {
-  for await (const batch of listCards(xrpc, params)) {
-  }
-
-  console.log('pulling collections')
-  for await (const batch of listCollections(xrpc, params)) {
-  }
-
-
-  console.log('COMPLETE')
-}
-
 export const pullCosmik = async ({ did, pds }: ResolvedActor) => {
   const xrpc = new Client({
     handler: simpleFetchHandler({ service: pds })
