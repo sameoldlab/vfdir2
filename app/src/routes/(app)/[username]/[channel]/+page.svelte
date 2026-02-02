@@ -4,10 +4,11 @@
 	import { page } from '$app/state'
 	import View from '$lib/components/view.svelte'
 	import { channels } from '$lib/data/maps.svelte'
-	import { pool } from '$lib/database/connectionPool.svelte'
 	import { channelContents } from '$lib/services/arena/queries.remote'
-	import { persistChannel } from '$lib/services/arena/sync'
+	import { persistChannels } from '$lib/services/arena/sync'
+	import { getPool } from '$lib/stores.svelte'
 	import type { Snapshot } from '@sveltejs/kit'
+
 
 	const channel = $derived(channels.get(page.params.channel!))
 	let errorMsg = $state('')
@@ -23,6 +24,7 @@
 			return
 		}
 		const promises: Promise<void>[] = []
+		const pool = getPool()
 		// promises.push(pool.exec(async (tx) => await persistChannel(tx, data.data)))
 		if (data.meta.has_more_pages) promises.push(syncContents(pageNo + 1))
 		await Promise.all(promises)

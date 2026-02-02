@@ -3,16 +3,17 @@
 <script lang="ts">
 	import Header from '$lib/components/header.svelte'
 	import { initStore } from '$lib/database/createTables'
-	import { pool } from '$lib/database/connectionPool.svelte'
+	import { DbPool } from '$lib/database/connectionPool.svelte'
 	import { onDestroy, onMount } from 'svelte'
 	import { beforeNavigate } from '$app/navigation'
-	import { setTree } from '$lib/stores.svelte'
+	import { getPool, setPool, setTree } from '$lib/stores.svelte'
 	import { bootstrap, parseEvent } from '$lib/database/watchEvents'
 	import type { NavigationTarget } from '@sveltejs/kit'
 	let { children } = $props()
 
 	const tree: NavigationTarget[] = $state([])
 	setTree(tree)
+	setPool(new DbPool())
 
 	beforeNavigate((nav) => {
 		switch (nav.type) {
@@ -27,13 +28,14 @@
 				else tree.push(nav.from)
 		}
 	})
+
 	let channel: BroadcastChannel | null
 	let ready = $state(false)
 	onMount(() => {
+		const pool = getPool()
 		console.debug('bootstrapping...')
 		pool.exec(async (tx) => {
 			await initStore(tx)
-			// watchEvents()
 			await bootstrap(tx)
 			console.log('All is steady')
 			ready = true
@@ -41,7 +43,6 @@
 
 		channel = new BroadcastChannel('updates')
 		channel.onmessage = (ev) => {
-			console.log('ack')
 			if (ev.data) {
 				const ub: bigint[] = [...ev.data.values()]
 				console.log({ ub, start: ub[0], end: ub.at(-1) })

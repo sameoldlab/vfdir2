@@ -1,7 +1,8 @@
 <!-- SPDX-License-Identifier: MPL-2.0 -->
 
 <script lang="ts">
-	import { pool } from '$lib/database/connectionPool.svelte'
+	import { getPool } from '$lib/stores.svelte'
+	const pool = getPool()
 
 	const channel = new BroadcastChannel('updates')
 	const eventData = $state<object[]>([])

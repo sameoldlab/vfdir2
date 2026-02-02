@@ -3,18 +3,18 @@
 <script lang="ts">
 	import View from '$lib/components/view.svelte'
 	import { users } from '$lib/data/maps.svelte'
-	import { pool } from '$lib/database/connectionPool.svelte.js'
 	import { ev_stmt_close, record_user } from '$lib/database/events.js'
 	import { persistChannels } from '$lib/services/arena/sync.js'
 	import {
 		persistCosmikConnections,
 		persistCosmikEntries
 	} from '$lib/services/atpro/sync.js'
-	import { getRouteCtx } from '$lib/stores.svelte.js'
+	import { getPool, getRouteCtx } from '$lib/stores.svelte.js'
 	import type { Snapshot } from '@sveltejs/kit'
 	import { untrack } from 'svelte'
 
 	const ctx = getRouteCtx()
+	const pool =  getPool()
 	const { data } = $props()
 	const user = $derived(users.get(ctx.user?.key))
 

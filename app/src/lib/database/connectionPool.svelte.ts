@@ -122,5 +122,3 @@ export class DbPool {
 		}
 	}
 }
-
-export const pool = new DbPool()
