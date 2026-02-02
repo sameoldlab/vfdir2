@@ -64,8 +64,8 @@
 		</a>
 		<div class="overlay">
 			<div class="start">
-				<div class="start">**</div>
-				<button class="end">...</button>
+				<div class="start"><a href='https://pdsls.dev/at://{c.key}'>↗</a></div>
+				<button class="end" onclick={() => console.log(c.type)}>{'{ }'}</button>
 			</div>
 			<div class="end">
 				{#if source}
