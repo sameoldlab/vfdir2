@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import { browser } from '$app/environment'
 import initWasm, { type DB, type SQLite3 } from '@vlcn.io/crsqlite-wasm'
 import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
 import type { TXAsync } from '@vlcn.io/xplat-api'
@@ -27,6 +28,7 @@ export class DbPool {
 	constructor(
 		args?: { dbName: string | undefined }
 	) {
+		if (!browser) return
 		this.dbName = args?.dbName || 'vfdir.db'
 		this.#initSql().then(sqlite => {
 			this.#sqlite = sqlite!
