@@ -22,7 +22,7 @@ export class DbPool {
 	dbName: string
 	status = $state<'available' | 'loading' | 'error'>('loading')
 	error = $state()
-	#channel = new BroadcastChannel('updates')
+	#channel: BroadcastChannel | null
 
 	constructor(
 		args?: { dbName: string | undefined }
@@ -62,6 +62,7 @@ export class DbPool {
 
 	}
 	#batchSubscribe() {
+		if (this.#channel === null) this.#channel = new BroadcastChannel('updates')
 		this.#timeout = null
 		this.#channel.postMessage(this.#updateBuffer.get(`log:18`))
 		this.#updateBuffer.clear();
