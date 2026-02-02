@@ -37,7 +37,12 @@ export class Connection {
       console.error(`Child not found for ${this.key} `);
       return
     }
-    return Object.assign(child, this) as Entry & Connection
+    return Object.assign(child, {
+      position: this.position,
+      pinned: this.pinned,
+      connected_at: this.connected_at,
+      connected_by: this.connected_by,
+    }) as Entry & Partial<Connection>
   }
 }
 export type ChannelI = ConstructorParameters<typeof Channel>[0]

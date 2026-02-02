@@ -24,10 +24,12 @@ const atpKey = (uri: ResourceUri) => {
 
 const normalizeConnection = (rec: AtRecord) => {
   if (is(NetworkCosmikCollectionLink.mainSchema, rec.value)) {
+    const parent_id = atpKey(rec.value.collection.uri)
+    const child_id = atpKey(rec.value.card.uri)
     const entry: ConnectionI = {
-      key: '',
-      parent_id: atpKey(rec.value.collection.uri),
-      child_id: atpKey(rec.value.card.uri),
+      key: `${parent_id}|${child_id}`,
+      parent_id,
+      child_id,
       position: 'position' in rec.value ? rec.value.position as number : Infinity,
       pinned: 'pinned' in rec.value ? rec.value.pinned as boolean : false,
       connected_at: new Date(rec.value.addedAt).valueOf(),
