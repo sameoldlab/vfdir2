@@ -62,7 +62,7 @@ export class DbPool {
 
 	}
 	#batchSubscribe() {
-		if (this.#channel === null) this.#channel = new BroadcastChannel('updates')
+		if (this.#channel == null) this.#channel = new BroadcastChannel('updates')
 		this.#timeout = null
 		this.#channel.postMessage(this.#updateBuffer.get(`log:18`))
 		this.#updateBuffer.clear();
