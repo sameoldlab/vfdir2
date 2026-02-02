@@ -9,7 +9,11 @@
 
 	let { block: b }: { block: Entry } = $props()
 
-	const content = b.type === 'text' ? micromark(b.content) : null
+	const content = $derived(b.type === 'text' ? micromark(b.content ?? '') : b.type === 'link' && b.image === '' ? `<p>${b.description}</p>` : null)
+	const genRoute = (e: Entry) => {
+		if (e.key.includes('/')) return `/${e.key}`
+		return `/${e.author.key}/${e.key}`
+	}
 </script>
 
 <article>
@@ -79,10 +83,10 @@
 				<div class="connections">
 					{#each b.connections as channel}
 						<a
-							href={`/${channel.author.key}/${channel.key}#${b.key}`}
+							href={`${genRoute(channel)}#${b.key}`}
 							class="connection"
 						>
-							<span>{channel.title} by {channel.author.key}</span>
+							<span>{channel.title} by {channel.author?.name}</span>
 							<p>{channel.length} blocks</p>
 						</a>
 					{/each}
@@ -98,7 +102,7 @@
 		width: 100%;
 		height: 100%;
 		flex-direction: column;
-		overflow-y: scroll;
+		overflow-y: auto;
 		container-name: article;
 		margin-inline: auto;
 		padding: 1em 1em 4em;
