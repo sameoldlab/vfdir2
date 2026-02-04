@@ -13,7 +13,7 @@
 	setRouteCtx(routeCtx)
 
 	$effect(() => {
-		if (data.user.key && !users.has(data.user.key)) {
+		if (data.user && data.user.key && !users.has(data.user.key)) {
 			console.log('trigger trigger, pull my finger')
 			getPool().exec(async (db) =>
 				record_user(db, {
