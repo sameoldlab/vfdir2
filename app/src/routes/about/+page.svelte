@@ -1,8 +1,3 @@
-<script>
-	import { circInOut } from 'svelte/easing'
-	import { fade } from 'svelte/transition'
-</script>
-
 <main>
 	<div class="fails">
 		<p class="text-5">Vagrant diagnoses give you more by joining fragments</p>
@@ -28,7 +23,7 @@
 			<a
 				href="https://same.supply?ref=vfdir"
 				target="_blank"
-				class="link text-7">my</a
+				class="text-7">my</a
 			>
 			plans are to focus on performance and new types of interactions. You are currently
 			using a canary* web version
@@ -36,7 +31,7 @@
 				>vauge allusions towards a native desktop alternative</span
 			> with much more on the way.
 		</p>
-		<p>Have fun discoveries and valuable linking</p>
+		<p>Have fun discovering and valuable linking</p>
 		<a class="text-7" href="/">begin.</a>
 	</div>
 </main>
