@@ -139,3 +139,6 @@ kbd {
   display: flex;
   gap: .25rem;
 }
+.error h1 {
+  font-size: 2rem;
+}
