@@ -13,7 +13,6 @@
 	} from '$lib/services/atpro/sync.js'
 	import { getPool, getRouteCtx } from '$lib/stores.svelte.js'
 	import type { Snapshot } from '@sveltejs/kit'
-	import { untrack } from 'svelte'
 
 	const ctx = getRouteCtx()
 	const pool = getPool()
