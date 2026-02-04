@@ -51,7 +51,7 @@
 					<a class="info" href="https://atproto.dev">?</a>
 				</div>
 			</div>
-			<input type="text" name="atproto-connect" placeholder="cool-site.me" />
+			<input type="text" name="atproto-connect" id="atproto-connect" placeholder="cool-site.me" />
 		</label>
 		<button class="btn text-4">continue.</button>
 	</form>
