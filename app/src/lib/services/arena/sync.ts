@@ -59,14 +59,14 @@ const normalizeEntry = (obj: ArenaEntry) => {
 export async function persistChannels(db: DB | TXAsync, user: ArenaUser, aEntries: ArenaChannel[]) {
 
 }
-export async function persistEntries(db: DB | TXAsync, channel: ArenaChannel, aEntries: ArenaEntry[]) {
+export async function persistEntries(db: DB | TXAsync, channel: ArenaChannel | undefined, aEntries: ArenaEntry[]) {
 	console.debug(`recording events with ${entries.size} entries materialized`)
 
-	const conns = channels.get(channel.slug)?.entries.map(e => e.key)
+	const conns = channel ? channels.get(channel.slug)?.entries.map(e => e.key) : []
 	const promises: Promise<void | void[]>[] = []
 
 	for (const aEntry of aEntries) {
-		const entry = normalizeEntry(aEntries)
+		const entry = normalizeEntry(aEntry)
 
 		promises.push(
 			record_entry(db, entry, entries.get(entry.key), {
@@ -75,7 +75,7 @@ export async function persistEntries(db: DB | TXAsync, channel: ArenaChannel, aE
 			})
 		)
 
-		if (aEntry.connection && !conns?.includes(entry.key)) {
+		if (aEntry.connection && !conns?.includes(entry.key) && channel) {
 			const conn = normalizeConnection(aEntry.connection, channel.slug, entry.key)
 			promises.push(record_connection(db, conn, 'arena'))
 		}

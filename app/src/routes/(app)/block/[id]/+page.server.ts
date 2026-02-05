@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 import { arenaClient } from "$lib/services/arena/client"
+import { error } from "@sveltejs/kit"
 import type { PageServerLoad } from "./$types"
 
 export const load: PageServerLoad = async ({ params, fetch, locals }) => {
@@ -15,4 +16,5 @@ export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 
     return { block, error }
   }
+  error(402, 'invalid block id')
 }
