@@ -5,7 +5,7 @@ import type { DB } from "@vlcn.io/crsqlite-wasm"
 import { Hlc, type HLC } from "./hlc"
 import type { StmtAsync, TXAsync } from "@vlcn.io/xplat-api"
 import { browser } from "$app/environment"
-import type { ConnectionI, Entry, EntryI, Service, User } from "$lib/data/types"
+import type { BlockI, ChannelI, ConnectionI, Entry, EntryI, Service, User } from "$lib/data/types"
 
 const VERSION = 1
 let stmt: StmtAsync | null = null
@@ -73,19 +73,20 @@ const diffEntry = (db: DB | TXAsync,
 ) => {
   const diffs: Record<string, any> = {}
 
-  if (current.title !== data.title)
-    diffs.title = data.title
-  if (current.description !== (data.description))
-    diffs.description = data.description
-  if (current.updated_at !== (data.updated_at))
-    diffs.updated_at = data.updated_at
+  const sharedKeys: (keyof Entry)[] = ['title', 'description', 'updated_at', 'uid']
+  const channelKeys: (keyof ChannelI)[] = ['status', 'image']
+  const blockKeys: (keyof BlockI)[] = ['content']
 
-  if (data.type == 'channel' && current.type == 'channel') {
-    if (current.status !== (data.status))
-      diffs.status = data.status
+  const keys = data.type === 'channel'
+    ? (sharedKeys as string[]).concat(channelKeys)
+    : (sharedKeys as string[]).concat(blockKeys)
+
+  for (const key of keys) {
+    if (current[key] !== data[key])
+      diffs[key] = data[key]
   }
 
-  return record(db, { data: diffs, type: 'mod', ...ids })
+  if (Object.keys(diffs).length > 0) return record(db, { data: diffs, type: 'mod', ...ids })
 }
 
 /** @warning check if object has already been recorded to avoid bloating event log */
