@@ -30,7 +30,7 @@
 	}
 	const genRoute = () => {
 		if (c.key.includes('/')) return `/${c.key}`
-		return `/${c.author.key}/${c.key}`
+		return c.type === 'channel' ? `/${c.author.key}/${c.key}` : `/block/${c.key}`
 	}
 </script>
 
