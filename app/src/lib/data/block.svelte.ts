@@ -40,7 +40,7 @@ export class Block implements Collectable {
 
   get author() {
     const a = users.get(this._author)
-    if (!a) throw Error(`${this._author} not found`)
+    if (!a) throw Error(`${this._author} not found on ${this}`)
     return a
   }
   get connections() {
