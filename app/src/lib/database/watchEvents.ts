@@ -30,18 +30,16 @@ export async function bootstrap(db: TXAsync | DB) {
 }
 
 export function parseEvent(events: object[]) {
+  const eventsParsed: string[] = []
   for (const e of events) {
     let {
-      type: [action, field],
+      type,
       originId: [_ts, _c, device],
       data,
     } = create(e, EventSchemaR)
+    let [action, field] = typeof type === 'string' ? [type, undefined] : type
 
-    console.debug({
-      type: [action, field],
-      originId: [_ts, _c, device],
-      data,
-    })
+    eventsParsed.push(`type: ${type}, ${device},\ndata: ${JSON.stringify(data)} `)
 
     // TODO: runtime data validation
     if (action === 'add' && field === 'user') {
@@ -78,8 +76,8 @@ export function parseEvent(events: object[]) {
       child?.addConnection(conn.parent_id)
       parent?.addEntry(conn)
     }
-
   }
+  console.debug(eventsParsed)
 }
 
 /*
