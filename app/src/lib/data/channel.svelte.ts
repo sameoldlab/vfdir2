@@ -110,7 +110,7 @@ export class Channel implements Collection, Collectable {
     if (this.#keys.has(conn.child_id)) return
     this.#keys.add(conn.child_id)
     this._entries.push(new Connection(conn))
-    this._entries.sort((a, b) => a.position - b.position)
+    this._entries.sort((a, b) => b.position - a.position)
   }
   get length() {
     return this._entries.length
