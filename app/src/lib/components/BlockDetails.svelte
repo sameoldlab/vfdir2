@@ -29,7 +29,7 @@
 			/>
 		{:else if b.type === 'attachment'}
 			<video
-				use:handleFile={{ src: b.attachment }}
+				use:handleFile={{ src: b.attachment! }}
 				data-src={b.attachment}
 				muted
 				autoplay
@@ -72,7 +72,7 @@
 				<a href={'/' + b.author.key}> {b.author.name} </a>
 			</div>
 
-			{#if b.source}
+			{#if 'source' in b && b.source}
 				<div class="data-item">
 					<p>Source</p>
 					<a href={b.source}> {b.title} </a>
