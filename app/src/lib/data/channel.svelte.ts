@@ -87,7 +87,9 @@ export class Channel implements Collection, Collectable {
   }
 
   get author() {
-    return users.get(this._author)
+    const a = users.get(this._author)
+    if (!a) throw Error(`${this._author} not found on ${this}`)
+    return a
   }
   get entries() {
     return this._entries.map(conn => conn.get()).filter(e => e !== undefined)
