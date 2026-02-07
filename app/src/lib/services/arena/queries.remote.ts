@@ -2,7 +2,7 @@ import { query } from "$app/server";
 import { type } from 'arktype'
 import { arenaClient } from "./client";
 
-export const userContents = query(type({
+export const getUserChannels = query(type({
   id: 'string',
   page: 'number'
 }), async ({ id, page }) => arenaClient.GET('/v3/users/{id}/contents', {
@@ -10,13 +10,15 @@ export const userContents = query(type({
     query: {
       per: 100,
       page,
+      sort: "updated_at_desc",
+      type: 'Channel'
     },
     path: { id }
   }
 })
 )
 
-export const channelContents = query(type({
+export const getChannelContents = query(type({
   id: 'string',
   page: 'number'
 }), async ({ id, page }) => arenaClient.GET('/v3/channels/{id}/contents', {
@@ -24,8 +26,10 @@ export const channelContents = query(type({
     query: {
       per: 100,
       page,
+      sort: "updated_at_desc",
     },
     path: { id }
   }
 })
 )
+
