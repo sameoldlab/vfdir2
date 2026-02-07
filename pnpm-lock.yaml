@@ -112,6 +112,9 @@ importers:
       micromark:
         specifier: ^4.0.2
         version: 4.0.2
+      multiformats:
+        specifier: ^13.4.2
+        version: 13.4.2
       openapi-fetch:
         specifier: ^0.15.0
         version: 0.15.0
@@ -2345,6 +2348,9 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+
+  multiformats@13.4.2:
+    resolution: {integrity: sha512-eh6eHCrRi1+POZ3dA+Dq1C6jhP1GNtr9CRINMb67OKzqW9I5DUuZM/3jLPlzhgpGeiNUlEGEbkCYChXMCc/8DQ==}
 
   mute-stream@2.0.0:
     resolution: {integrity: sha512-WWdIxpyjEn+FhQJQQv9aQAYlHoNVdzIzUySNV1gHUPDSdZJ3yZn7pAAbQcV7B56Mvu881q9FZV+0Vx2xC44VWA==}
@@ -4975,6 +4981,8 @@ snapshots:
     transitivePeerDependencies:
       - '@types/node'
     optional: true
+
+  multiformats@13.4.2: {}
 
   mute-stream@2.0.0:
     optional: true
