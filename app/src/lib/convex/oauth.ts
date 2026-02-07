@@ -59,7 +59,7 @@ export const getServiceConnection = serverQuery({
       .query('sessions')
       .withIndex('by_key', (q) => q.eq('key', sessionKey))
       .unique()
-    if (!session) return { error: 'no such session', code: 404 }
+    if (!session) return null
 
     const connection = await ctx.db
       .query("serviceConnections")

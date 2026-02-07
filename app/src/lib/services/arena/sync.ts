@@ -77,6 +77,43 @@ export async function persistEntries(db: DB | TXAsync, channel: ArenaChannel | u
 
 		if (aEntry.connection && !conns?.includes(entry.key) && channel) {
 			const conn = normalizeConnection(aEntry.connection, channel.slug, entry.key)
+export async function persistEntries(db: DB | TXAsync, channel_slug: ArenaChannel['slug'] | undefined, aEntries: ArenaEntry[]) {
+	console.debug(`recording ${aEntries.length} events with ${entries.size} entries materialized`)
+	console.debug(aEntries)
+
+	const conns = channel_slug ? channels.get(channel_slug)?.entries.map(e => e.key) : []
+	const promises: Promise<void | void[]>[] = []
+	const aUsers: string[] = []
+
+	for (const aEntry of aEntries) {
+		const entry = normalizeEntry(aEntry)
+
+		const user = aEntry.type === 'Channel'
+			? {
+				name: aEntry.owner.name,
+				key: aEntry.owner.slug,
+				avatar: aEntry.owner.avatar ?? ''
+			}
+			: {
+				name: aEntry.user.name,
+				key: aEntry.user.slug,
+				avatar: aEntry.user.avatar ?? ''
+			}
+
+		if (!users.get(user.key) && !aUsers.includes(user.key)) {
+			aUsers.push(user.key)
+			promises.push(record_user(db, user))
+		}
+
+		promises.push(
+			record_entry(db, entry, entries.get(entry.key), {
+				service: 'arena',
+				updated_at: entry.updated_at
+			})
+		)
+
+		if (aEntry.connection && !conns?.includes(entry.key) && channel_slug) {
+			const conn = normalizeConnection(aEntry.connection, channel_slug, entry.key)
 			promises.push(record_connection(db, conn, 'arena'))
 		}
 	}
