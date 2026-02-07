@@ -54,7 +54,7 @@ export type EventSchema<O extends object> = {
    * add|mod|delete-column|row
    * @example add:block
    */
-  type: 'mod' | 'connect' | `${'add' | 'delete'}:${'user' | 'block' | 'channel'}`
+  type: 'mod' | 'connect' | 'save' | `${'add' | 'delete'}:${'user' | 'block' | 'channel'}`
   /** 
    * field to which the event is related 
    * @example block:0L239vsDajfdse...
