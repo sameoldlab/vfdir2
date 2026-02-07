@@ -7,7 +7,7 @@ import { openDB } from 'idb'
 export const entries = $state(new SvelteMap<string, Entry>())
 export const channels = $state(new SvelteMap<string, Channel>())
 export const users = $state(new SvelteMap<string, User>())
-export const media = $state(new SvelteMap<string, Media>())
+export const media = $state(new SvelteMap<Media['key'], Media['value']>())
 export const pageSync = new Map<string, string>()
 
 export const persistData = async () => {
