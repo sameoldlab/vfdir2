@@ -4,7 +4,7 @@
 	import { page } from '$app/state'
 	import View from '$lib/components/view.svelte'
 	import { channels } from '$lib/data/maps.svelte'
-	import { syncArenaChannel } from '$lib/services/arena/syncContents'
+	import { syncArenaList } from '$lib/services/arena/syncContents'
 	import { persistEntries } from '$lib/services/arena/sync'
 	import { getPool } from '$lib/stores.svelte'
 	import type { Snapshot } from '@sveltejs/kit'
@@ -18,7 +18,7 @@
 		getPool().exec(async (tx) => {
 			if (!data.channel || !data.contents) return
 			await persistEntries(tx, page.params.channel, [data.channel])
-			await syncArenaChannel(data.contents, tx)
+			await syncArenaList(data.contents, tx)
 		})
 	})
 

@@ -6,7 +6,7 @@
 	import View from '$lib/components/view.svelte'
 	import { users } from '$lib/data/maps.svelte'
 	import { ev_stmt_close, record_user } from '$lib/database/events.js'
-	import { persistChannels } from '$lib/services/arena/sync.js'
+	import { syncArenaList } from '$lib/services/arena/syncContents.js'
 	import {
 		persistCosmikConnections,
 		persistCosmikEntries
@@ -38,7 +38,10 @@
 		console.log(contents)
 		switch (data.service) {
 			case 'arena':
-				pool.exec(async (tx) => persistChannels(tx, data.user, contents))
+				pool.exec(async (tx) => {
+					if(data.contents && !('then' in data.contents))
+					await syncArenaList(data.contents, tx, 'user')
+				})
 
 				break
 			case 'atproto':

@@ -109,7 +109,7 @@ export const record_entry = async (
     })
   }
 
-  if (current.updated_at === updated_at) return
+  if (current.uid === data.uid) return
   return diffEntry(db, { data, current, objectId, originId })
 }
 

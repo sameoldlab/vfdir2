@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { DB } from '@vlcn.io/crsqlite-wasm'
-import { ev_stmt_close, record_connection, record_entry } from '$lib/database/events'
+import { ev_stmt_close, record_connection, record_entry, record_user } from '$lib/database/events'
 import type { TXAsync } from '@vlcn.io/xplat-api'
-import type { ArenaBlock, ArenaChannel, ArenaConnection, ArenaEntry, ArenaUser } from './types'
-import { entries, channels } from '$lib/data/maps.svelte'
-import type { Block, BlockI, ChannelI, ConnectionI } from '$lib/data/types'
+import type { ArenaBlock, ArenaChannel, ArenaConnection, ArenaEntry } from './types'
+import { entries, channels, users } from '$lib/data/maps.svelte'
+import type { Block, BlockI, Channel, ChannelI, ConnectionI, EntryI } from '$lib/data/types'
+import { hashObject } from '$lib/utils/hashObject'
 
 const ArenaTypes: Readonly<
 	Record<ArenaBlock['type'], Block['type']>
@@ -27,10 +28,10 @@ const normalizeConnection = (conn: ArenaConnection, parent_id: string, child_id:
 	connected_by: conn.connected_by?.slug ?? '',
 })
 
-const normalizeEntry = (obj: ArenaEntry) => {
+const normalizeEntry = (obj: ArenaEntry, hash: string) => {
 	if (obj.type === 'Channel') {
 		const entry: ChannelI = {
-			uid: obj.id.toString(),
+			uid: hash,
 			type: 'channel',
 			key: obj.slug,
 			title: obj.title,
@@ -44,7 +45,7 @@ const normalizeEntry = (obj: ArenaEntry) => {
 	}
 
 	const entry: BlockI = {
-		key: obj.id.toString(),
+		key: hash,
 		author_slug: obj.user.slug,
 		uid: obj.id.toString(),
 		title: obj.title ?? '',
@@ -56,27 +57,6 @@ const normalizeEntry = (obj: ArenaEntry) => {
 	return entry
 }
 
-export async function persistChannels(db: DB | TXAsync, user: ArenaUser, aEntries: ArenaChannel[]) {
-
-}
-export async function persistEntries(db: DB | TXAsync, channel: ArenaChannel | undefined, aEntries: ArenaEntry[]) {
-	console.debug(`recording events with ${entries.size} entries materialized`)
-
-	const conns = channel ? channels.get(channel.slug)?.entries.map(e => e.key) : []
-	const promises: Promise<void | void[]>[] = []
-
-	for (const aEntry of aEntries) {
-		const entry = normalizeEntry(aEntry)
-
-		promises.push(
-			record_entry(db, entry, entries.get(entry.key), {
-				service: 'arena',
-				updated_at: entry.updated_at
-			})
-		)
-
-		if (aEntry.connection && !conns?.includes(entry.key) && channel) {
-			const conn = normalizeConnection(aEntry.connection, channel.slug, entry.key)
 export async function persistEntries(db: DB | TXAsync, channel_slug: ArenaChannel['slug'] | undefined, aEntries: ArenaEntry[]) {
 	console.debug(`recording ${aEntries.length} events with ${entries.size} entries materialized`)
 	console.debug(aEntries)
@@ -86,7 +66,10 @@ export async function persistEntries(db: DB | TXAsync, channel_slug: ArenaChanne
 	const aUsers: string[] = []
 
 	for (const aEntry of aEntries) {
-		const entry = normalizeEntry(aEntry)
+		const hash = hashObject(aEntry)
+		let entry: EntryI
+		if (typeof hash === 'string') entry = normalizeEntry(aEntry, hash)
+		else entry = normalizeEntry(aEntry, await hash)
 
 		const user = aEntry.type === 'Channel'
 			? {
