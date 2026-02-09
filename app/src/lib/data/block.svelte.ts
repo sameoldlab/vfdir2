@@ -80,7 +80,7 @@ export class Block implements Collectable {
   }
 
   write() {
-    return JSON.stringify({
+    return {
       uid: this.uid,
       type: this.type,
       title: this.title,
@@ -95,6 +95,6 @@ export class Block implements Collectable {
       author_slug: this._author,
       attachment: this.attachment,
       connections: [...this._connections.values()]
-    })
+    }
   }
 }

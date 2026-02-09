@@ -82,7 +82,6 @@ export class Channel implements Collection, Collectable {
 
     channels.set(this.key, this)
     entries.set(this.key, this)
-    console.log(`adding entry ${this.key}`)
     users.get(this._author)?.addEntry(this.key, 'channels')
   }
 
@@ -105,6 +104,20 @@ export class Channel implements Collection, Collectable {
   }
   removeEntry(key: Collectable["key"]) {
     return false
+  }
+  write() {
+    return {
+      key: this.key,
+      uid: this.uid,
+      title: this.title,
+      type: this.type,
+      description: this.description,
+      created_at: this.created_at,
+      updated_at: this.updated_at,
+      status: this.status,
+      image: this.image,
+      author_slug: this._author,
+    } as ChannelI
   }
   addEntry(conn: ConnectionI) {
     if (this.#keys.has(conn.child_id)) return
