@@ -9,6 +9,8 @@
 	import { getPool, setPool, setTree } from '$lib/stores.svelte'
 	import { bootstrap, parseEvent } from '$lib/database/watchEvents'
 	import type { NavigationTarget } from '@sveltejs/kit'
+	import { persistData } from '$lib/data/maps.svelte'
+	import { PersistedState } from 'runed'
 	let { children } = $props()
 
 	const tree: NavigationTarget[] = $state([])
@@ -29,6 +31,12 @@
 		}
 	})
 
+	let lastRow = new PersistedState('lastRow', 0n, {
+	  serializer: {
+	    deserialize: (val) => BigInt(val),
+	    serialize: (val) => val.toString(),
+	  }
+	})
 	let channel: BroadcastChannel | null
 	let ready = $state(false)
 	onMount(() => {
@@ -53,8 +61,8 @@
 					)
 					console.debug(`reading ${events.length} events live`)
 					parseEvent(events)
-					console.error('FINISH THE PERSIST FUNCTION!!')
-					// persistData().then(() => lastRow.current = ub.at(-1)!)
+					console.error('Test THE PERSIST FUNCTION!!')
+					persistData().then(() => lastRow.current = ub.at(-1)!)
 				})
 				// .catch((err) => { console.error(err) })
 			}

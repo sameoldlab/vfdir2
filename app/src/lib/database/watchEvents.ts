@@ -11,12 +11,6 @@ import { channels, entries, media, pageSync, persistData } from "$lib/data/maps.
 import { PersistedState } from 'runed'
 import { browser } from "$app/environment"
 
-let lastRow = new PersistedState('lastRow', 0n, {
-  serializer: {
-    deserialize: (val) => BigInt(val),
-    serialize: (val) => val.toString(),
-  }
-})
 
 
 /** Load past events into data maps */
