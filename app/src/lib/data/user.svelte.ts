@@ -49,4 +49,11 @@ export class User implements Collection {
   get entries() {
     return this.#entries.map(e => entries.get(e)).filter(e => e !== undefined)
   }
+  write() {
+    return {
+      key: this.key,
+      name: this.name,
+      avatar: this.avatar,
+    }
+  }
 }

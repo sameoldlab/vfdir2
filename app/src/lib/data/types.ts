@@ -14,7 +14,7 @@ export type Service = 'arena' | 'atproto' | 'raindrop'
 export interface Base {
   key: string
   /** serialize data for storage */
-  // write: () => string
+  write: () => object
   /** read data from JSON string to create object */
   // read: (value: string) => Base
 }
