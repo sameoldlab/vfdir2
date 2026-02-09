@@ -71,7 +71,7 @@ export const EventSchemaR = object({
 	 * add|mod|delete-column|row
 	 * @example mod:title
 	 */
-	type: union([enums(['save', 'connect', 'mod']), coerce(tuple([enums(['add', 'del']), string()]), string(), (data) => data.split(':'))]),
+	type: union([enums(['save', 'connect', 'mod', 'hash']), coerce(tuple([enums(['add', 'del']), string()]), string(), (data) => data.split(':'))]),
 	/** 
 	 * field to which the event is related 
 	 * @example block:0L239vsDajfdse...

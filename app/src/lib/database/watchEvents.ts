@@ -7,7 +7,7 @@ import { Block } from '$lib/data/block.svelte'
 import { Channel } from '$lib/data/channel.svelte'
 import type { ConnectionI, EntryI } from "$lib/data/types"
 import { User } from '$lib/data/user.svelte'
-import { channels, entries, media, persistData } from "$lib/data/maps.svelte"
+import { channels, entries, media, pageSync, persistData } from "$lib/data/maps.svelte"
 import { PersistedState } from 'runed'
 import { browser } from "$app/environment"
 
@@ -54,6 +54,12 @@ export function parseEvent(events: object[]) {
       }
       if (obj.type === 'channel') new Channel(obj)
       else new Block(obj)
+    } else if (action === 'hash') {
+      const { key, hash } = data as {
+        key: string,
+        hash: string
+      }
+      pageSync.set(key, hash)
     } else if (action === 'save') {
       media.set(data.original as string, data.url)
     }
