@@ -5,6 +5,7 @@ import type { TXAsync } from "@vlcn.io/xplat-api"
 import { getChannelContents, getUserChannels } from "./queries.remote"
 import { persistEntries } from "./sync"
 import type { ArenaConnectableListResponse } from "./types"
+import { record_hash } from "$lib/database/events"
 
 /**
  * Pulls a collection of entries (channels and blocks) from arena queries,
@@ -36,7 +37,7 @@ export const syncArenaList = async (contents: ArenaConnectableListResponse, tx: 
 
 		await Promise.all(promises)
 		// only sync if promises resolve succesfully
-		pageSync.set(path, fetchHash)
+		await record_hash(tx, path, fetchHash)
 	} catch (error) {
 		console.error(error)
 		return error

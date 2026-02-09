@@ -54,7 +54,7 @@ export type EventSchema<O extends object> = {
    * add|mod|delete-column|row
    * @example add:block
    */
-  type: 'mod' | 'connect' | 'save' | `${'add' | 'delete'}:${'user' | 'block' | 'channel'}`
+  type: 'mod' | 'connect' | 'save' | `${'add' | 'delete'}:${'user' | 'block' | 'channel'}` | `hash`
   /** 
    * field to which the event is related 
    * @example block:0L239vsDajfdse...
@@ -132,6 +132,19 @@ export const record_connection = (
     type: `connect`,
     originId: hlc().receive(`${data.connected_at}:0:${service}`),
     data
+  })
+}
+
+export const record_hash = (
+  db: DB | TXAsync,
+  key: string,
+  hash: string,
+) => {
+  return record(db, {
+    objectId: `hash:${key}`,
+    type: `hash`,
+    originId: hlc().receive(`${Date.now()}:0:local`),
+    data: { key, hash }
   })
 }
 
