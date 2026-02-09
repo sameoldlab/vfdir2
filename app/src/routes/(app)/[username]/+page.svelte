@@ -35,7 +35,6 @@
 			)
 		}
 		if (!contents) return
-		console.log(contents)
 		switch (data.service) {
 			case 'arena':
 				pool.exec(async (tx) => {

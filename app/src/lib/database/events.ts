@@ -39,7 +39,6 @@ export const record = async <D extends object>(db: TXAsync | DB,
 export const ev_stmt_close = async (tx: TXAsync | null = null) => {
   stmt && await stmt.finalize(tx)
   stmt = null
-  console.log('finalized stmt', stmt)
   return
 }
 
