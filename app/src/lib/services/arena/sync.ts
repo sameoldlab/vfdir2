@@ -54,6 +54,26 @@ const normalizeEntry = (obj: ArenaEntry, hash: string) => {
 		created_at: new Date(obj.created_at).valueOf(),
 		updated_at: new Date(obj.updated_at).valueOf(),
 	}
+	switch (obj.type) {
+		case 'Text':
+			entry.content = obj.content.markdown
+			break
+		case 'Link':
+			entry.content = obj.content?.markdown ?? ''
+			entry.image = obj.image?.large.src
+			break
+		case 'Attachment':
+			entry.attachment = obj.attachment.url
+			entry.filename = obj.attachment.filename ?? undefined
+			// entry.file_size = obj.attachment.file_size
+			entry.image = obj.image?.large.src
+			break
+		case 'Embed':
+	}
+	entry.image = obj.image?.large.src ?? ''
+	entry.source = obj.source?.url
+	entry.provider_url = obj.source?.provider?.url
+
 	return entry
 }
 
