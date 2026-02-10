@@ -34,7 +34,7 @@ export class Connection {
   get() {
     const child = entries.get(this.child_id)
     if (!child) {
-      console.error(`Child not found for ${this.key} `);
+      console.error(`Child not found for ${this.child_id} `);
       return
     }
     return Object.assign(child, {
