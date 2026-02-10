@@ -41,11 +41,18 @@ export const persistData = async () => {
 
     const writes: Promise<IDBValidKey | void>[] = []
     all[store].forEach(async (value: any, key: string) => {
-        let data = (store === 'media' || store === 'pageSync') ? value : value.write()
-        writes.push(obj.put(data, key))
+      // try {
+      let data = (store === 'media' || store === 'pageSync') ? value : value.write()
+      writes.push(obj.put(data, key))
+      // await obj.put(data, key)
+      // } catch (e) {
+      //   console.error(e)
+      //   console.error(value.write())
+      // }
     })
 
     writes.push(tx.done)
+    // await tx.done
     await Promise.all(writes).catch((e) => console.trace(e, store))
   }
 
