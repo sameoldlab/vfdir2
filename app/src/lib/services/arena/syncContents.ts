@@ -20,9 +20,14 @@ export const syncArenaList = async (contents: ArenaConnectableListResponse, tx: 
 	const fetchHash = await hashObject(contents.data)
 
 	// check if contents have changed before pulling a full list
-	if (pageSync.get(path) === fetchHash) return
+	if (pageSync.get(path) === fetchHash) {
+		console.info(`${fetchHash} for ${path} is equal`)
+		return
+	}
 
-	const promises: Promise<any>[] = [persistEntries(tx, page.params.channel, contents.data)]
+	const promises: Promise<any>[] = []
+	// only process full pages
+	if (contents.meta.per_page === 100) promises.push(persistEntries(tx, page.params.channel, contents.data))
 
 	try {
 		if (contents.meta.has_more_pages) {
