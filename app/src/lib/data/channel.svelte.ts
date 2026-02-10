@@ -117,6 +117,8 @@ export class Channel implements Collection, Collectable {
       status: this.status,
       image: this.image,
       author_slug: this._author,
+      entries: $state.snapshot(this._entries),
+      connections: [...this._connections.values()]
     } as ChannelI
   }
   addEntry(conn: ConnectionI) {
