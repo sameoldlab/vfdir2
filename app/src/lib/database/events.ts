@@ -30,10 +30,12 @@ export const record = async <D extends object>(db: TXAsync | DB,
   // if (type === 'add:user')
   // console.log({ originId, type, objectId, data })
   try {
-    return stmt.run(db, VERSION, localId, originId, JSON.stringify(data), type, objectId)
+    await stmt.run(db, VERSION, localId, originId, JSON.stringify(data), type, objectId)
+    return true
   } catch (err) {
     console.log(stmt)
     console.error(`Error recording log: ${err}`)
+    return false
   }
 }
 export const ev_stmt_close = async (tx: TXAsync | null = null) => {
@@ -86,6 +88,7 @@ const diffEntry = (db: DB | TXAsync,
   }
 
   if (Object.keys(diffs).length > 0) return record(db, { data: diffs, type: 'mod', ...ids })
+  return false
 }
 
 /** @warning check if object has already been recorded to avoid bloating event log */
@@ -108,7 +111,7 @@ export const record_entry = async (
     })
   }
 
-  if (current.uid === data.uid) return
+  if (current.uid === data.uid) return false
   return diffEntry(db, { data, current, objectId, originId })
 }
 

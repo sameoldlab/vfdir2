@@ -11,5 +11,7 @@ export type ArenaEntry = components['schemas']['ConnectableList']['data'][number
  */
 export type ArenaConnection = components['schemas']['ConnectionContext']
 export type ArenaUser = components['schemas']['User']
+export type ArenaEmbedUser = components['schemas']['EmbeddedUser']
+export type ArenaEmbedGroup = components['schemas']['EmbeddedGroup']
 
 export type ArenaConnectableListResponse = components['schemas']['ConnectableListResponse']

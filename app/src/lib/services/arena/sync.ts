@@ -3,10 +3,11 @@
 import type { DB } from '@vlcn.io/crsqlite-wasm'
 import { ev_stmt_close, record_connection, record_entry, record_user } from '$lib/database/events'
 import type { TXAsync } from '@vlcn.io/xplat-api'
-import type { ArenaBlock, ArenaChannel, ArenaConnection, ArenaEntry } from './types'
+import type { ArenaBlock, ArenaChannel, ArenaConnection, ArenaEmbedGroup, ArenaEmbedUser, ArenaEntry } from './types'
 import { entries, channels, users } from '$lib/data/maps.svelte'
 import type { Block, BlockI, ChannelI, ConnectionI, EntryI } from '$lib/data/types'
 import { hashObject } from '$lib/utils/hashObject'
+import { dev } from '$app/environment'
 
 const ArenaTypes: Readonly<
 	Record<ArenaBlock['type'], Block['type']>
@@ -76,13 +77,19 @@ const normalizeEntry = (obj: ArenaEntry, hash: string) => {
 
 	return entry
 }
+export function normalizeUser(user: ArenaEmbedUser | ArenaEmbedGroup) {
+	return {
+		name: user.name,
+		key: user.slug,
+		avatar: user.avatar ?? ''
+	}
+}
 
 export async function persistEntries(db: DB | TXAsync, channel_slug: ArenaChannel['slug'] | undefined, aEntries: ArenaEntry[]) {
 	console.debug(`recording ${aEntries.length} events with ${entries.size} entries materialized`)
-	console.debug(aEntries)
 
-	const conns = channel_slug ? channels.get(channel_slug)?.entries.map(e => e.key) : []
-	const promises: Promise<void | void[]>[] = []
+	const conns = channels.get(channel_slug ?? '')?.entries.map(e => e.key) ?? []
+	const promises: Promise<boolean>[] = []
 	const aUsers: string[] = []
 
 	for (const aEntry of aEntries) {
@@ -92,16 +99,8 @@ export async function persistEntries(db: DB | TXAsync, channel_slug: ArenaChanne
 		else entry = normalizeEntry(aEntry, await hash)
 
 		const user = aEntry.type === 'Channel'
-			? {
-				name: aEntry.owner.name,
-				key: aEntry.owner.slug,
-				avatar: aEntry.owner.avatar ?? ''
-			}
-			: {
-				name: aEntry.user.name,
-				key: aEntry.user.slug,
-				avatar: aEntry.user.avatar ?? ''
-			}
+			? normalizeUser(aEntry.owner)
+			: normalizeUser(aEntry.user)
 
 		if (!users.get(user.key) && !aUsers.includes(user.key)) {
 			aUsers.push(user.key)
@@ -115,12 +114,21 @@ export async function persistEntries(db: DB | TXAsync, channel_slug: ArenaChanne
 			})
 		)
 
-		if (aEntry.connection && !conns?.includes(entry.key) && channel_slug) {
+		if (channel_slug && aEntry.connection && !conns?.includes(entry.key)) {
+			if (aEntry.connection.connected_by) {
+				const user = normalizeUser(aEntry.connection.connected_by)
+				if (!users.get(user.key) && !aUsers.includes(user.key)) {
+					aUsers.push(user.key)
+					promises.push(record_user(db, user))
+				}
+			}
 			const conn = normalizeConnection(aEntry.connection, channel_slug, entry.key)
 			promises.push(record_connection(db, conn, 'arena'))
 		}
 	}
 
-	await Promise.all(promises).then(() => ev_stmt_close(db))
+	const results = await Promise.all(promises)
+	await ev_stmt_close(db)
+	if (dev) console.debug(`recorded ${results.filter(r => r).length} events from ${aEntries.entries.length} entries`)
 }
 
