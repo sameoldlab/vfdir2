@@ -32,19 +32,17 @@
 	})
 
 	let lastRow = new PersistedState('lastRow', 0n, {
-	  serializer: {
-	    deserialize: (val) => BigInt(val),
-	    serialize: (val) => val.toString(),
-	  }
+		serializer: {
+			deserialize: (val) => BigInt(val),
+			serialize: (val) => val.toString()
+		}
 	})
 	let channel: BroadcastChannel | null
 	let ready = $state(false)
 	onMount(() => {
 		const pool = getPool()
 		console.debug('bootstrapping...')
-		pool.exec(async (tx) => {
-			await initStore(tx)
-			await bootstrap(tx)
+		Promise.all([pool.exec(initStore), bootstrap()]).then(() => {
 			console.log('All is steady')
 			ready = true
 		})
@@ -61,8 +59,8 @@
 					)
 					console.debug(`reading ${events.length} events live`)
 					parseEvent(events)
-					console.error('Test THE PERSIST FUNCTION!!')
-					persistData().then(() => lastRow.current = ub.at(-1)!)
+					await persistData()
+					lastRow.current = ub.at(-1)!
 				})
 				// .catch((err) => { console.error(err) })
 			}
