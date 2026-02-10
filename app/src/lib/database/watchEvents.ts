@@ -7,20 +7,90 @@ import { Block } from '$lib/data/block.svelte'
 import { Channel } from '$lib/data/channel.svelte'
 import type { ConnectionI, EntryI } from "$lib/data/types"
 import { User } from '$lib/data/user.svelte'
-import { channels, entries, media, pageSync, persistData } from "$lib/data/maps.svelte"
+import { channels, entries, media, pageSync, persistData, type Store } from "$lib/data/maps.svelte"
 import { PersistedState } from 'runed'
 import { browser } from "$app/environment"
-
-
+import { openDB } from "idb"
 
 /** Load past events into data maps */
-export async function bootstrap(db: TXAsync | DB) {
+export async function bootstrap() {
   if (!browser) return
-  const events = await db.execO('select rowid,* from log')
-  console.debug(`loading ${events.length} events into memory`)
-  parseEvent(events)
+  console.time('idb')
+
+  const stores = ['entries', 'users', 'media', 'pageSync'] as const
+  const db = await openDB<Store>('objectStore', undefined, {
+    upgrade(db) {
+      for (const store of stores) {
+        if (db.objectStoreNames.contains(store)) continue
+        db.createObjectStore(store)
+      }
+    }
+  })
+  let len = 0
+  const getValues = async () => {
+    for (const store of ['media', 'pageSync'] as const) {
+      const tx = db.transaction(store, 'readonly')
+      const obj = tx.objectStore(store)
+      const keys = await obj.getAllKeys()
+
+      len += keys.length
+      console.log({ keys })
+      for (const key of keys) {
+        const data = (await obj.getKey(key))!
+        switch (store) {
+          case "media":
+            media.set(key, data)
+          case "pageSync":
+            pageSync.set(key, data)
+        }
+      }
+      await tx.done
+    }
+  }
+
+  const getEntries = async () => {
+    const tx = db.transaction('entries', 'readonly')
+    const obj = tx.objectStore('entries')
+
+    for (const { entries: e, connections, ...o } of await obj.getAll()) {
+      if (o.type === 'channel') {
+        const channel = new Channel(o)
+        for (const entry of e) { channel.addEntry(entry) }
+        for (const chan of connections) { channel.addConnection(chan) }
+      } else {
+        const block = new Block(o)
+        for (const chan of connections) { block.addConnection(chan) }
+      }
+    }
+    return tx.done
+  }
+  const getUsers = async () => {
+    const tx = db.transaction('users', 'readonly')
+    const obj = tx.objectStore('users')
+    for (const { entries: e, channels, ...o } of await obj.getAll()) {
+      const user = User.upsert(o.key, o.name, o.avatar)
+      for (const chan of channels) { user.addEntry(chan, 'channels') }
+      // this also includes channels,
+      // but they are ignored by the Set in User.addEntry 
+      for (const entry of e) { user.addEntry(entry) }
+    }
+    return tx.done
+  }
+
+  await Promise.all([getValues(), getEntries(), getUsers()])
+
+  db.close()
+
+  console.timeEnd('idb') // 0.75ms - 0.33ms
+  console.log(localStorage.getItem('lastRow'))
+
+  // console.time('sql')
+  // const events = await db.execO('select rowid,* from log')
+  // console.debug(`loading ${events.length} events into memory`)
+  // parseEvent(events)
+  // console.timeEnd('sql')
+  // full 22.981538ms - 21.8666ms per event
   // catch (err) { console.error(err) }
-  return
 }
 
 export function parseEvent(events: object[]) {

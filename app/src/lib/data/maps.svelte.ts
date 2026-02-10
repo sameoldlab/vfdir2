@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import { SvelteMap } from "svelte/reactivity"
-import type { Channel, User, Entry, Media, EntryI } from './types'
+import type { Channel, User, Entry, Media, ConnectionI, BlockI, ChannelI } from './types'
 import { openDB, type DBSchema } from 'idb'
 
 export const entries = $state(new SvelteMap<string, Entry>())
@@ -10,13 +10,19 @@ export const users = $state(new SvelteMap<string, User>())
 export const media = $state(new SvelteMap<Media['key'], Media['value']>())
 export const pageSync = new Map<string, string>()
 
-interface Store extends DBSchema {
-
-  entries: { key: string, value: EntryI }
-  users: { key: string, value: { key: string, name: string, avatar: string } }
+export interface Store extends DBSchema {
+  entries: {
+    key: string,
+    value: (ChannelI & { entries: ConnectionI[] } | BlockI) & { connections: Channel['key'][] }
+  }
+  users: {
+    key: string,
+    value: { key: string, name: string, avatar: string } & { entries: string[], channels: string[] }
+  }
   media: { key: string, value: string }
   pageSync: { key: string, value: string },
 }
+
 export const persistData = async () => {
   const all = { entries, users, media, pageSync } as const
   const stores = Object.keys(all) as (keyof typeof all)[]

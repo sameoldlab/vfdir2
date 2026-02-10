@@ -32,7 +32,7 @@ export class User implements Collection {
     return new User(key, name, avatar)
   }
 
-  addEntry(key: string, type: 'blocks' | 'channels') {
+  addEntry(key: string, type: 'blocks' | 'channels' = 'blocks') {
     if (this.#keys.has(key)) return
     this.#keys.add(key)
     if (type === 'channels') this.#channels.push(key)
@@ -54,6 +54,8 @@ export class User implements Collection {
       key: this.key,
       name: this.name,
       avatar: this.avatar,
+      entries: $state.snapshot(this.#entries),
+      channels: $state.snapshot(this.#channels)
     }
   }
 }
