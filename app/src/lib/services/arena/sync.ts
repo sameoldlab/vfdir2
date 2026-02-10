@@ -5,7 +5,7 @@ import { ev_stmt_close, record_connection, record_entry, record_user } from '$li
 import type { TXAsync } from '@vlcn.io/xplat-api'
 import type { ArenaBlock, ArenaChannel, ArenaConnection, ArenaEntry } from './types'
 import { entries, channels, users } from '$lib/data/maps.svelte'
-import type { Block, BlockI, Channel, ChannelI, ConnectionI, EntryI } from '$lib/data/types'
+import type { Block, BlockI, ChannelI, ConnectionI, EntryI } from '$lib/data/types'
 import { hashObject } from '$lib/utils/hashObject'
 
 const ArenaTypes: Readonly<
@@ -45,9 +45,9 @@ const normalizeEntry = (obj: ArenaEntry, hash: string) => {
 	}
 
 	const entry: BlockI = {
-		key: hash,
+		key: obj.id.toString(),
 		author_slug: obj.user.slug,
-		uid: obj.id.toString(),
+		uid: hash,
 		title: obj.title ?? '',
 		description: obj.description?.markdown ?? '',
 		type: ArenaTypes[obj.type],
