@@ -51,7 +51,7 @@ export class DbPool {
 
 				if (this.#timeout === null) this.#timeout = setTimeout(() =>
 					this.#batchSubscribe()
-					, 2)
+					, 0)
 
 				// this.#subscribe(type, db, table, row)
 			})
