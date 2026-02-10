@@ -28,9 +28,8 @@ export const persistData = async () => {
   const stores = Object.keys(all) as (keyof typeof all)[]
 
   const db = await openDB<Store>('objectStore', undefined, {
-    upgrade(db, oldV, newV, transaction, event) {
+    upgrade(db) {
       for (const store of stores) {
-        if (db.objectStoreNames.contains(store)) continue
         db.createObjectStore(store)
       }
     }
@@ -41,9 +40,9 @@ export const persistData = async () => {
     const obj = tx.objectStore(store)
 
     const writes: Promise<IDBValidKey | void>[] = []
-    all[store].forEach((value: any, key: string) => {
-      if (store === 'media' || store === 'pageSync') writes.push(obj.add(value, key))
-      else writes.push(obj.add(value.write(), key))
+    all[store].forEach(async (value: any, key: string) => {
+        let data = (store === 'media' || store === 'pageSync') ? value : value.write()
+        writes.push(obj.put(data, key))
     })
 
     writes.push(tx.done)
