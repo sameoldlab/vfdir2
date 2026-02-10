@@ -81,6 +81,7 @@ export class Block implements Collectable {
 
   write() {
     return {
+      key: this.key,
       uid: this.uid,
       type: this.type,
       title: this.title,
