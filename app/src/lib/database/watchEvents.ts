@@ -2,7 +2,6 @@
 
 import { EventSchemaR } from "./schema"
 import { create } from "superstruct"
-import type { DB, TXAsync } from "@vlcn.io/xplat-api"
 import { Block } from '$lib/data/block.svelte'
 import { Channel } from '$lib/data/channel.svelte'
 import type { ConnectionI, EntryI } from "$lib/data/types"
@@ -32,18 +31,17 @@ export async function bootstrap() {
       const tx = db.transaction(store, 'readonly')
       const obj = tx.objectStore(store)
       const keys = await obj.getAllKeys()
+      const values = await obj.getAll()
 
-      len += keys.length
-      console.log({ keys })
-      for (const key of keys) {
-        const data = (await obj.getKey(key))!
+      keys.forEach((key, i) => {
+        const data = values[i]!
         switch (store) {
           case "media":
             media.set(key, data)
           case "pageSync":
             pageSync.set(key, data)
         }
-      }
+      })
       await tx.done
     }
   }
@@ -125,7 +123,7 @@ export function parseEvent(events: object[]) {
       }
       pageSync.set(key, hash)
     } else if (action === 'save') {
-      media.set(data.original as string, data.url)
+      media.set(data.key as string, data.url as string)
     }
   }
   // second pass to process connections after entries
