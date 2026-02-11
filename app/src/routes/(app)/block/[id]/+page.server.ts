@@ -3,11 +3,13 @@ import { arenaClient } from "$lib/services/arena/client"
 import { error } from "@sveltejs/kit"
 import type { PageServerLoad } from "./$types"
 import { env } from "$env/dynamic/private"
+import { api } from "$lib/convex/_generated/api"
+import { cvx } from "$lib/server/convex"
 
 export const load: PageServerLoad = async ({ params, fetch, locals }) => {
 
   if (!!Number(params.id)) {
-    const auth = await locals.ctx.convex.query(locals.ctx.authApi.getServiceConnection, {
+    const auth = await cvx.query(api.oauth.getServiceConnection, {
       cvx_secret: env.SERVER_SECRET,
       sessionKey: locals.sessionKey,
       service: 'arena'

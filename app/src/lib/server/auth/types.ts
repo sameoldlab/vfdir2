@@ -1,13 +1,9 @@
-import type { api } from "$lib/convex/_generated/api";
 import type { AuthorizeTarget, OAuthClient, OAuthSession } from "@atcute/oauth-node-client";
-import type { ConvexHttpClient } from "convex/browser";
 
 export type ServiceName = 'arena' | 'raindrop'
 export type SessionCapabilities = ServiceName[]
 
 export type AuthContext = {
-  convex: ConvexHttpClient;
-  authApi: typeof api.oauth;
   /** Looks up connected data providers */
   services: Map<ServiceName, AuthService<'oauth2'>> & Map<'atproto', AuthService<'atproto', OAuthSession>>;
 }

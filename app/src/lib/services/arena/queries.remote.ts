@@ -2,6 +2,8 @@ import { getRequestEvent, query } from "$app/server";
 import { type } from 'arktype'
 import { arenaClient } from "./client";
 import { env } from "$env/dynamic/private";
+import { cvx } from "$lib/server/convex";
+import { api } from "$lib/convex/_generated/api";
 
 export const getUserChannels = query(type({
   id: 'string',
@@ -53,7 +55,7 @@ export const getChannelContents = query(type({
 async function getToken() {
   const { locals } = getRequestEvent()
 
-  const auth = await locals.ctx.convex.query(locals.ctx.authApi.getServiceConnection, {
+  const auth = await cvx.query(api.oauth.getServiceConnection, {
     cvx_secret: env.SERVER_SECRET,
     sessionKey: locals.sessionKey,
     service: 'arena'

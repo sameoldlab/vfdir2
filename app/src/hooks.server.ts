@@ -16,8 +16,6 @@ let ctx: AuthContext = null
 export const init = () => {
   if (!ctx) {
     ctx = {
-      convex: new ConvexHttpClient(env.PUBLIC_CONVEX_URL),
-      authApi: api.oauth,
       services: new Map([
         ['raindrop', newRaindropService({
           clientId: env.PUBLIC_RNDRP_CLIENT_ID,
@@ -75,7 +73,7 @@ const sessionManger: Handle = async ({ event, resolve }) => {
   }
 
   try {
-    let session = await ensureSession(ctx, sessionKey)
+    let session = await ensureSession(sessionKey)
     if (session) event.locals.sessionKey = sessionKey
   } catch (err) {
     console.error('Failed to persist session: ', sessionKey, err)

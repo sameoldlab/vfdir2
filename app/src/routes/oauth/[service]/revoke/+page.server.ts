@@ -3,7 +3,7 @@ import type { PageServerLoad } from './$types';
 import { ensureSession } from '$lib/server/auth/manager';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
-  const result = await ensureSession(locals.ctx, locals.sessionKey)
+  const result = await ensureSession(locals.sessionKey)
   console.log({ ensureSession: result })
 
   if (!(params.service === 'arena' || params.service === 'raindrop'))

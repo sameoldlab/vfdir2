@@ -8,7 +8,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
   const service = locals.ctx.services.get(params.service)
   if (!service) error(400, `Service ${params.service} not configured`)
 
-  const result = await ensureSession(locals.ctx, locals.sessionKey)
+  const result = await ensureSession(locals.sessionKey)
   console.log({ ensureSession: result })
 
   throw redirect(302, service.auth_url);

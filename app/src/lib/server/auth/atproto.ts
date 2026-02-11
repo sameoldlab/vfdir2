@@ -9,14 +9,12 @@ import {
   WebDidDocumentResolver,
   WellKnownHandleResolver,
 } from '@atcute/identity-resolver';
-import { ConvexHttpClient } from 'convex/browser';
 import { api } from '$lib/convex/_generated/api';
 import type { AuthContext, AuthService } from './types';
+import { cvx } from '../convex';
 
 class ConvexStore<T> {
   constructor(
-    private convex: ConvexHttpClient,
-    private authApi: typeof api.oauth,
     private type: 'session' | 'state'
   ) { }
 
@@ -24,7 +22,7 @@ class ConvexStore<T> {
     if (this.type === 'state') {
       const expiresAt = ttl ? Date.now() + ttl : Date.now() + 10 * 60 * 1000
 
-      await this.convex.mutation(this.authApi.setAtpState, {
+      await cvx.mutation(api.oauth.setAtpState, {
         cvx_secret: penv.SERVER_SECRET,
         stateId: key,
         state: JSON.stringify(value),
@@ -35,8 +33,8 @@ class ConvexStore<T> {
 
   async get(key: string): Promise<T | null> {
     if (this.type === 'session') {
-      const conn = await this.convex.query(
-        this.authApi.getServiceConnection, {
+      const conn = await cvx.query(
+        api.oauth.getServiceConnection, {
         cvx_secret: penv.SERVER_SECRET,
         service: 'atproto',
         sessionKey: key
@@ -50,7 +48,7 @@ class ConvexStore<T> {
       return JSON.parse(conn.access_key) as T
 
     } else if (this.type === 'state') {
-      const result = await this.convex.query(this.authApi.getAtpState, {
+      const result = await cvx.query(api.oauth.getAtpState, {
         cvx_secret: penv.SERVER_SECRET,
         stateId: key
       })
@@ -61,12 +59,12 @@ class ConvexStore<T> {
 
   async delete(key: string) {
     if (this.type === 'state') {
-      await this.convex.mutation(this.authApi.deleteAtpStateEXT, {
+      await cvx.mutation(api.oauth.deleteAtpStateEXT, {
         cvx_secret: penv.SERVER_SECRET,
         stateId: key
       })
     } else if (this.type === 'session') {
-      await this.convex.mutation(this.authApi.deleteServiceConnection, {
+      await cvx.mutation(api.oauth.deleteServiceConnection, {
         cvx_secret: penv.SERVER_SECRET,
         service: 'atproto',
         sessionKey: key
@@ -101,8 +99,8 @@ const initClient = async (ctx: AuthContext, { domain, client_name }: AtpConfig) 
     },
     keyset,
     stores: {
-      sessions: new ConvexStore(ctx.convex, ctx.authApi, 'session'),
-      states: new ConvexStore(ctx.convex, ctx.authApi, 'state'),
+      sessions: new ConvexStore('session'),
+      states: new ConvexStore('state'),
     },
     // async requestLock(name, fn) { },
     actorResolver: new LocalActorResolver({

@@ -13,7 +13,7 @@ import {
 export const actions = {
   connect: async ({ locals, request }) => {
     try {
-      const result = await ensureSession(locals.ctx, locals.sessionKey)
+      const result = await ensureSession(locals.sessionKey)
       if (!result) error(501, { message: JSON.stringify([{ error: 'no session' }]) })
 
       const identifier = (await request.formData()).get('atproto-connect')
