@@ -1,5 +1,5 @@
 import { env as penv } from '$env/dynamic/private'
-import { importJwkKey, OAuthClient, OAuthResolverError, OAuthSession, scope, type AuthorizeTarget } from '@atcute/oauth-node-client'
+import { importJwkKey, OAuthClient, OAuthResolverError, OAuthSession, scope } from '@atcute/oauth-node-client'
 import {
   CompositeDidDocumentResolver,
   CompositeHandleResolver,
@@ -55,6 +55,7 @@ class ConvexStore<T> {
       if (!result) return null
       return JSON.parse(result) as T
     }
+    return null
   }
 
   async delete(key: string) {
@@ -79,7 +80,7 @@ export interface AtpConfig {
   domain: string
 }
 
-const initClient = async (ctx: AuthContext, { domain, client_name }: AtpConfig) => {
+const initClient = async ({ domain, client_name }: AtpConfig) => {
   const keyset = await Promise.all([importJwkKey(JSON.parse(penv.KEY_JWK))])
   return new OAuthClient({
     metadata: {
@@ -127,9 +128,9 @@ export function newAtpService(config: AtpConfig): AuthService<'atproto', OAuthSe
   let client: OAuthClient | null = null
   return {
     name: 'atproto',
-    getClient: async (ctx: AuthContext) => client ?? await initClient(ctx, config),
-    authorize: async (ctx, { sessionKey, returnTo, target }) => {
-      client = client ?? await initClient(ctx, config)
+    getClient: async () => client ?? await initClient(config),
+    authorize: async ({ sessionKey, returnTo, target }) => {
+      client = client ?? await initClient(config)
       console.log('authorizing...')
       // const { url, stateId } = await
       return client.authorize({
@@ -149,8 +150,8 @@ export function newAtpService(config: AtpConfig): AuthService<'atproto', OAuthSe
       })
       // return { url: url.toString(), stateId }
     },
-    callback: async (ctx, params) => {
-      client = client ?? await initClient(ctx, config)
+    callback: async (params) => {
+      client = client ?? await initClient(config)
       const { session } = await client.callback(params)
 
       return {

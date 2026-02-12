@@ -19,8 +19,8 @@ export const actions = {
       const identifier = (await request.formData()).get('atproto-connect')
       if (!identifier) error(403, { message: JSON.stringify([{ field: 'atproto-connect', error: 'is null' }]) })
       console.log({ identifier })
-      const atpService = locals.ctx.services.get('atproto')
-      const client = await atpService.getClient(locals.ctx)
+      const atpService = locals.ctx.services.get('atproto')!
+      const client = await atpService.getClient()
 
       const res = await client.authorize({
         target: {

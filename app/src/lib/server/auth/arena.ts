@@ -26,7 +26,7 @@ export const newArenaService = ({ clientId, clientSecret, redirect_uri }: {
 }): AuthService<AccessToken> => ({
   name: 'arena',
   auth_url: `https://www.are.na/oauth/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=code`,
-  async callback(ctx, params) {
+  async callback(params) {
     const code = params.get('code')
     if (!code) {
       throw new Error('No auth code', {

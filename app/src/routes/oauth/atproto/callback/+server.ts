@@ -4,7 +4,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const atp = locals.ctx.services.get('atproto')
 	if (!atp) return error(500, 'atproto service not found')
 
-	const result = await atp.callback(locals.ctx, url.searchParams);
+	const result = await atp.callback(url.searchParams);
 	console.log(result)
 
 	redirect(302, '/accounts');

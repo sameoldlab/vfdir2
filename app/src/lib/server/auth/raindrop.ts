@@ -44,7 +44,7 @@ export const newRaindropService = ({ clientId: client_id, clientSecret: client_s
 }): AuthService<'oauth2', RaindropSession> => ({
   name: 'raindrop',
   auth_url: `https://raindrop.io/oauth/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}`,
-  async callback(ctx, params) {
+  async callback(params) {
     const code = params.get('code')
     if (!code) {
       throw new Error('No auth code', {

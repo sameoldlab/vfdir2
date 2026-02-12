@@ -11,9 +11,8 @@ export type AuthContext = {
 export interface AuthService<Kind extends 'oauth2' | 'atproto', TSession = string | object,> {
   name: 'atproto' | ServiceName
   auth_url?: Kind extends 'oauth2' ? string : never
-  getClient?: Kind extends 'oauth2' ? never : (ctx: AuthContext) => Promise<OAuthClient>
+  getClient?: Kind extends 'oauth2' ? never : () => Promise<OAuthClient>
   authorize: Kind extends 'oauth2' ? never : (
-    ctx: AuthContext,
     options: {
       sessionKey: string;
       returnTo?: string;
@@ -23,7 +22,6 @@ export interface AuthService<Kind extends 'oauth2' | 'atproto', TSession = strin
 
   /** handles oauth redirect uri */
   callback(
-    ctx: AuthContext,
     params: URLSearchParams
   ): Promise<{
     session: string;
