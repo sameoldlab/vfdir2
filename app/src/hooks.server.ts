@@ -56,11 +56,13 @@ export const init = () => {
 
 const addAuthContext: Handle = async ({ event, resolve }) => {
   event.locals.ctx = ctx
+  console.log(event.cookies.getAll())
   return resolve(event)
 }
 
 const sessionManger: Handle = async ({ event, resolve }) => {
   let sessionKey = event.cookies.get('vfdir_sessionKey')
+  console.log(event.cookies.getAll())
   if (!sessionKey) {
     sessionKey = 'dev_' + ulid()
     event.cookies.set('vfdir_sessionKey', sessionKey, {
