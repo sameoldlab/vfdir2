@@ -67,7 +67,7 @@ const sessionManger: Handle = async ({ event, resolve }) => {
       path: '/',
       httpOnly: true,
       secure: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 365 * 24 * 1200
     })
   }
