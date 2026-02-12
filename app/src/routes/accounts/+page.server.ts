@@ -7,7 +7,5 @@ export const load: PageServerLoad = async ({ locals }) => {
     sessionId: locals.sessionKey
   })
 
-  return {
-    connections
-  }
+  return { connections }
 }
