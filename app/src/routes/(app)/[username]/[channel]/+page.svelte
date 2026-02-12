@@ -44,19 +44,18 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{channel?.title ? channel.title + ' | ' : ''}vfdir</title>
+</svelte:head>
+
 {#if channel}
-	<View data={channel.entries} {y} />
 	{#if channel.entries.length === 0}
 		<div class="error">
-			<p>Channel is empty.</p>
-			<br />
-			Searching arena for a matching channel...
-			<p>
-				or... make one of your o-- <span class="text-4"
-					>sorry! haven't built this part yet</span
-				>
-			</p>
+			<p>No entries saved</p>
+			<br /> Pulliing entries from arena...
 		</div>
+	{:else}
+		<View data={channel.entries} {y} />
 	{/if}
 {:else}
 	{#if data.error}
