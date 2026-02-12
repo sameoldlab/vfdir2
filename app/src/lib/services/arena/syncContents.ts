@@ -30,7 +30,7 @@ export const syncArenaList = async (contents: ArenaConnectableListResponse, tx: 
 	if (contents.meta.per_page === 100) promises.push(persistEntries(tx, page.params.channel, contents.data))
 
 	try {
-		if (contents.meta.has_more_pages) {
+		if (contents.meta.has_more_pages || contents.meta.per_page < 100) {
 			const { error, data } = kind === 'user'
 				? await getUserChannels({ id: page.params.username!, page: pageNo })
 				: await getChannelContents({ id: page.params.channel!, page: pageNo })
