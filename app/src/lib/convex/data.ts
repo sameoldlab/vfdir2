@@ -14,10 +14,10 @@ export const queryWithSession = customQuery(query, {
       .unique()
     if (!session) throw new Error('no session found')
 
-    const now = Date.now()
+    const now = Date.now() / 1000
     const services = (await ctx.db.query('serviceConnections')
       .withIndex('by_sessionId_service', q => q.eq("sessionId", session._id))
-      .filter(q => q.or(q.neq(q.field('expiresAt'), undefined), q.gt(q.field('expiresAt'), now)))
+      .filter(q => q.or(q.eq(q.field('expiresAt'), undefined), q.gt(q.field('expiresAt'), now)))
       .collect()).map(s => ({
         user: s.userId,
         service: s.service
